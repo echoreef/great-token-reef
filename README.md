@@ -5,6 +5,10 @@ Code and Codex token usage. It reads the session logs already on your machine,
 turns your usage into stats, and awards fish as you cross token milestones. It
 runs entirely on your own computer: nothing is uploaded anywhere.
 
+![The Reef, showing a tank of fish, today's spend and live Claude session cards](screenshots/reef.png)
+
+The screenshot uses made-up data from `pnpm demo`, described below.
+
 ## Quick start
 
 ```sh
@@ -21,6 +25,7 @@ opens the Reef in your browser.
 
 - `pnpm dev` runs the server and the web app in development mode.
 - `pnpm start` builds the web app and serves everything from one process.
+- `pnpm demo` starts the Reef on made-up data (see below).
 - `pnpm test` runs every package's tests.
 - `pnpm typecheck` typechecks every package.
 - `pnpm icons` regenerates the favicon and app icons from `icon.png`.
@@ -36,6 +41,19 @@ usage history, catches and settings. Delete the folder to start over.
 
 Fish are forward-only: history already on your disk when you first install
 shows up in your stats, but only usage after install earns fish.
+
+## Try it with demo data
+
+```sh
+pnpm demo
+```
+
+This writes a made-up Claude Code history to a temporary folder and starts the
+Reef on `127.0.0.1:3034` (change it with `GTR_PORT`). It sets all three data
+locations, so your own session logs and `~/.great-token-reef/` are never read
+or changed. The tank starts empty with a yellow badge showing the catches
+waiting to be released; click it to fill the tank. Stop the demo (Ctrl-C)
+before running it again.
 
 ## Optional connections
 

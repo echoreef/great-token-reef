@@ -19,7 +19,7 @@ export default defineConfig(
     rules: { 'preserve-caught-error': 'off' },
   },
   {
-    files: ['packages/server/**/*.ts', 'packages/shared/**/*.ts', 'packages/web/vite.config.ts'],
+    files: ['packages/server/**/*.ts', 'packages/shared/**/*.ts', 'packages/web/vite.config.ts', 'scripts/**/*.ts'],
     languageOptions: { globals: globals.node },
   },
   {

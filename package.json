@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "pnpm --filter @gtr/server dev",
     "start": "pnpm --filter @gtr/web build && pnpm --filter @gtr/server start",
+    "demo": "sh scripts/demo.sh",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
