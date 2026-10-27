@@ -5,9 +5,11 @@ Code and Codex token usage. It reads the session logs already on your machine,
 turns your usage into stats, and awards fish as you cross token milestones. It
 runs entirely on your own computer: nothing is uploaded anywhere.
 
-![The Reef, showing a tank of fish, today's spend and live Claude session cards](screenshots/reef.png)
+![The tank in fullscreen, with a fish for every token milestone and a fishing line for each live Claude session](screenshots/reef-fullscreen.png)
 
-The screenshot uses made-up data from `pnpm demo`, described below.
+![The Reef page, showing today's spend, live Claude session cards and plan windows](screenshots/reef.png)
+
+The screenshots use made-up data from `pnpm demo`, described below.
 
 ## Quick start
 
