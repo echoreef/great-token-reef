@@ -3,3 +3,8 @@ dist
 .idea/
 *.db*
 graft/
+.env*
+*.pem
+docs/
+.claude/
+.ignore
