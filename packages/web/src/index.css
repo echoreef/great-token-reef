@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+/* `dark:` follows the .dark class on <html> (set by components/ThemeToggle.tsx and the inline script in
+   index.html) instead of the OS setting, so the header toggle can override it. */
+@custom-variant dark (&:where(.dark, .dark *));
+html.dark { color-scheme: dark; }
+
 /* The Reef tank (components/Tank.tsx) — fish positions come from the
    swim simulation (lib/tankSim.ts) via inline transforms; this is only the
    tail beat, whose speed the loop sets via playbackRate from each fish's speed. */

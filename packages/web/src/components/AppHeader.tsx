@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { ReefWidget } from './ReefWidget';
+import { ThemeToggle } from './ThemeToggle';
 
 const LINKS = [
   ['/', 'Reef'],
@@ -23,7 +24,7 @@ export function AppHeader() {
           {label}
         </Link>
       ))}
-      <span className="ml-auto flex items-center gap-2"><ReefWidget /></span>
+      <span className="ml-auto flex items-center gap-2"><ThemeToggle /><ReefWidget /></span>
     </nav>
   );
 }

@@ -6,6 +6,13 @@
     <title>The Great Token Reef</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <script>
+      // Set the theme before first paint so a saved or OS dark mode does not flash light. Keep in step with lib/theme.ts.
+      try {
+        var t = localStorage.getItem('gtr-theme');
+        if (t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
