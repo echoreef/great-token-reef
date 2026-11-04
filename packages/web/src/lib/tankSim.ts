@@ -8,6 +8,7 @@ import {
   type Bounds, type Rng, type Swimmer, type SwimmerSpec,
 } from './tankMotion';
 import { habitTick, placeHabit, rollHabit, type Sway } from './tankHabitSteer';
+import { nextHuntTime } from './tankHunt';
 import type { Anchors, Habit } from './tankHabits';
 
 export type { Bounds, Rng, SwimMode, Swimmer, SwimmerSpec } from './tankMotion';
@@ -131,8 +132,13 @@ export function spawn(specs: SwimmerSpec[], bounds: Bounds, rng: Rng, now: numbe
       liftPx: 0,
       puffUntil: 0,
       sinkPx: 0,
+      quarry: null,
+      nextHuntAt: Number.POSITIVE_INFINITY,
+      fullUntil: 0,
     };
     placeHabit(s, bounds, rng, now, anchors);
+    // Drawn last and only for hunters, so every other fish keeps its random sequence.
+    if (spec.hunter) s.nextHuntAt = nextHuntTime(rng, now);
     return s;
   });
 }
