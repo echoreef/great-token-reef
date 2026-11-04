@@ -19,6 +19,10 @@ describe('legendary ladder', () => {
     expect(at7b[0]).toMatchObject({ seed: 'legend#0', species: 1000, threshold: 100_000_000 });
   });
 
+  it('marks only the plankton-eating sharks as filter feeders', () => {
+    expect(LEGENDARY_DEFS.filter((d) => d.filterFeeder).map((d) => d.name)).toEqual(['Whale Shark', 'Megamouth Shark']);
+  });
+
   it('places every shiny after the last regular', () => {
     const regulars = LEGENDARY_DEFS.map((_, i) => legendaryThreshold(i, false));
     const shinies = LEGENDARY_DEFS.map((_, i) => legendaryThreshold(i, true));

@@ -8,6 +8,8 @@ export type LegendaryPlan =
 
 export interface LegendaryDef {
   name: string; sci: string; lengthCm: number; fact: string; plan: LegendaryPlan;
+  /** eats plankton, so never hunts another fish in the tank */
+  filterFeeder?: true;
 }
 
 export const LEGENDARY_DEFS: readonly LegendaryDef[] = [
@@ -25,11 +27,11 @@ export const LEGENDARY_DEFS: readonly LegendaryDef[] = [
     fact: 'A great white can sense a single drop of blood in about 100 liters of water.' },
   { name: 'Killer Whale', sci: 'Orcinus orca', lengthCm: 800, plan: 'orca',
     fact: 'Killer whales are the largest members of the dolphin family and hunt in family pods.' },
-  { name: 'Whale Shark', sci: 'Rhincodon typus', lengthCm: 1200, plan: 'shark',
+  { name: 'Whale Shark', sci: 'Rhincodon typus', lengthCm: 1200, plan: 'shark', filterFeeder: true,
     fact: 'The whale shark is the largest fish alive and feeds mainly on plankton.' },
   { name: 'Oarfish', sci: 'Regalecus glesne', lengthCm: 800, plan: 'oarfish',
     fact: 'The oarfish is the longest bony fish known, and it is rarely seen alive.' },
-  { name: 'Megamouth Shark', sci: 'Megachasma pelagios', lengthCm: 550, plan: 'shark',
+  { name: 'Megamouth Shark', sci: 'Megachasma pelagios', lengthCm: 550, plan: 'shark', filterFeeder: true,
     fact: 'The megamouth was first discovered in 1976 when one tangled in a ship\'s anchor off Hawaii.' },
   { name: 'Greenland Shark', sci: 'Somniosus microcephalus', lengthCm: 500, plan: 'shark',
     fact: 'Greenland sharks may live more than 270 years, the longest of any vertebrate.' },
