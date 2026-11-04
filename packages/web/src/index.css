@@ -87,6 +87,9 @@ html.dark { color-scheme: dark; }
   to { transform: translateY(-10px) scale(2.2); opacity: 0; }
 }
 
+/* Bits of a fish a shark just ate; useSwimLoop throws, sinks and fades each one. */
+.reef-fleck { position: absolute; border-radius: 30% 70% 50% 50%; pointer-events: none; }
+
 /* Tank environment vars (lib/tankEnv.ts), registered so changes cross-fade over 10s. */
 @property --reef-water-0 { syntax: '<color>'; inherits: true; initial-value: #0ea5b7; }
 @property --reef-water-1 { syntax: '<color>'; inherits: true; initial-value: #0b7a99; }

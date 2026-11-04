@@ -5,13 +5,17 @@ import {
   ART_RATIO, WAG_MIN, dropFood, easeWag, isGone, mouthOf, quantizeWag, rescale, spawn, spawnDropIn, step, swimOff, transformOf, wagAnimation,
   type Bounds, type Sway, type Swimmer, type SwimmerSpec, type World,
 } from '../lib/tankSim';
-import { setHunter } from '../lib/tankHunt';
+import { fleckColors, flecksFor, type Fleck } from '../lib/tankChomp';
+import { setHunter, type Meal } from '../lib/tankHunt';
 import type { HuntMotion } from './useTankHunt';
 import type { ReleaseMotion } from './useTankRelease';
 
 const SWELL_SECONDS = 1.5;
 /** Most bubbles and sand puffs alive in the bubble layer at once. */
 const BUBBLE_CAP = 40;
+/** ms an eaten fish takes to shrink into the bite */
+const GULP_MS = 280;
+const FLECKS = 12;
 
 // Owns the simulation + rAF loop. Pauses when the tab is hidden, the tank
 // is scrolled out of view, or the user prefers reduced motion (fish then
@@ -233,9 +237,45 @@ export function useSwimLoop(
         for (let i = 0; i < n; i++) bubbleAt(layer, e.x + (Math.random() - 0.5) * 8, e.y - i * 4);
       }
     };
-    const chomp = (m: { x: number; y: number }) => {
+    const fleckAt = (layer: HTMLDivElement, x: number, y: number, f: Fleck) => {
+      if (layer.childElementCount >= BUBBLE_CAP) return;
+      const p = document.createElement('div');
+      p.className = 'reef-fleck';
+      p.style.cssText = `left:${x}px;top:${y}px;width:${f.size}px;height:${f.size}px;margin:${-f.size / 2}px 0 0 ${-f.size / 2}px;background:${f.color}`;
+      layer.appendChild(p);
+      const a = p.animate([
+        { transform: 'translate(0, 0) rotate(0deg)', opacity: 0.95 },
+        { transform: `translate(${f.dx}px, ${f.dy}px) rotate(120deg)`, opacity: 0.85, offset: 0.25 },
+        { transform: `translate(${f.dx * 1.15}px, ${f.dy + f.sink}px) rotate(260deg)`, opacity: 0 },
+      ], { duration: f.ms, easing: 'cubic-bezier(0.2, 0.7, 0.4, 1)', fill: 'forwards' });
+      a.onfinish = () => p.remove();
+      a.oncancel = () => p.remove();
+    };
+    // The eaten fish shrinks into the bite as a copy outside React, so the school can drop the real one at once.
+    const chomp = (m: Meal) => {
+      const el = fishRefs.current.get(m.id);
       const layer = bubbleLayer.current;
+      let fills: (string | null)[] = [];
+      if (el && layer) {
+        const ghost = el.cloneNode(true) as HTMLElement;
+        ghost.className = 'reef-wag pointer-events-none absolute left-0 top-0';
+        ghost.removeAttribute('role');
+        ghost.removeAttribute('tabindex');
+        layer.appendChild(ghost);
+        fills = [...ghost.querySelectorAll('[fill]')].map((n) => n.getAttribute('fill'));
+        const a = (ghost.firstElementChild as HTMLElement | null)?.animate(
+          [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(0.2)', opacity: 0 }],
+          { duration: GULP_MS, easing: 'ease-in', fill: 'forwards' },
+        );
+        if (a) {
+          a.onfinish = () => ghost.remove();
+          a.oncancel = () => ghost.remove();
+        } else ghost.remove();
+      }
+      // Gone from the sim already; React drops it from the school on the next render.
+      el?.style.setProperty('visibility', 'hidden');
       if (!layer) return;
+      for (const f of flecksFor(fleckColors(fills), Math.random, FLECKS)) fleckAt(layer, m.x, m.y, f);
       const n = 6 + Math.floor(Math.random() * 3);
       for (let i = 0; i < n; i++) bubbleAt(layer, m.x + (Math.random() - 0.5) * 24, m.y + (Math.random() - 0.5) * 16 - i * 3);
     };
@@ -267,8 +307,6 @@ export function useSwimLoop(
       blow(dt);
       puff(events.eaten);
       for (const m of events.meals) {
-        // Gone from the sim already; hide it until React drops it from the school.
-        fishRefs.current.get(m.id)?.style.setProperty('visibility', 'hidden');
         chomp(m);
         hunt.current.onMeal(m);
       }
