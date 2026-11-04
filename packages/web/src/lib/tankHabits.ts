@@ -58,6 +58,16 @@ export function habitForSpecies(species: number): Habit {
   return def ? habitFor(def) : 'default';
 }
 
+/** Sharks and the killer whale hunt smaller fish; plankton-eating sharks never do. */
+export function huntsFor(species: number): boolean {
+  if (isLegendary(species)) {
+    const def = LEGENDARY_DEFS[legendaryIndex(species)]!;
+    return def.plan === 'orca' || (def.plan === 'shark' && !def.filterFeeder);
+  }
+  const e = ENTRIES[species];
+  return e ? SPECIES_DEFS[e.s]?.plan === 'shark' : false;
+}
+
 const BANDS: Partial<Record<Habit, [number, number]>> = {
   pelagic: [0.08, 0.35],
   bottom: [0.74, 0.9],
