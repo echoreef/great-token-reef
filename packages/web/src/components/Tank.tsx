@@ -33,6 +33,7 @@ import { useTankPlaque } from './useTankPlaque';
 import { useTankRelease } from './useTankRelease';
 import { useCausticSpeed, useSnappedBubbleRate, useWeedClock } from './useTankScenery';
 import { useSwimLoop } from './useSwimLoop';
+import { useTankHunt } from './useTankHunt';
 import { useTankFullscreen, useTankLayout } from './useTankFullscreen';
 
 // The Reef tank (docs/reef-tank-plan.md). Fish positions come from the pure
@@ -108,18 +109,25 @@ export function Tank({ onHeldRewards }: {
     () => (queueHeld ? [] : rosterFor(release.hidden, release.bests, release.guests)),
     [queueHeld, rosterFor, release.hidden, release.bests, release.guests],
   );
-  const specs = useMemo(() => roster.map((r) => specFor(r, fullscreen !== null, scale)), [roster, fullscreen, scale]);
+  // Sharks hunt in the full tank only, and never over a release.
+  const hunting = fullscreen !== null && !release.releasing;
+  const specs = useMemo(
+    () => roster.map((r) => {
+      const sp = specFor(r, fullscreen !== null, scale);
+      return sp.hunter && !hunting ? { ...sp, hunter: false } : sp;
+    }),
+    [roster, fullscreen, scale, hunting],
+  );
   useEffect(() => {
     specsRef.current = specs;
   }, [specs]);
-  // Fish leaving the roster mid-release swim off-edge and stay rendered until gone.
-  const school = useMemo(() => {
-    const ids = new Set(specs.map((sp) => sp.id));
-    return [
-      ...roster.map((r, i) => ({ fish: r, spec: specs[i]!, leaving: false })),
-      ...release.leavers.filter((l) => !ids.has(l.spec.id)).map((l) => ({ ...l, leaving: true })),
-    ];
-  }, [roster, specs, release.leavers]);
+  const rosterIds = useMemo(() => new Set(specs.map((sp) => sp.id)), [specs]);
+  const hunt = useTankHunt(hunting, rosterIds, bounds.width);
+  // Fish leaving the roster mid-release swim off-edge and stay rendered until gone; a fish a shark ate is away for a while.
+  const school = useMemo(() => [
+    ...roster.flatMap((r, i) => (hunt.eaten.has(specs[i]!.id) ? [] : [{ fish: r, spec: specs[i]!, leaving: false }])),
+    ...release.leavers.filter((l) => !rosterIds.has(l.spec.id)).map((l) => ({ ...l, leaving: true })),
+  ], [roster, specs, rosterIds, hunt.eaten, release.leavers]);
   const swimSpecs = useMemo(() => school.map((f) => f.spec), [school]);
   const bubbleRate = useSnappedBubbleRate(Number(env.vars['--reef-bubble-rate'] ?? 1));
   const decor = useMemo(() => decorFor(bounds.width, fullscreen !== null), [bounds.width, fullscreen]);
@@ -158,7 +166,7 @@ export function Tank({ onHeldRewards }: {
   const sway = useMemo(() => ({ amp: swayAmp, degPerCurrent: 7 / (18 * scale) }), [swayAmp, scale]);
   const { fishRefs, simRef, feed } = useSwimLoop(
     tankRef, bubbleLayer, flakeLayer, swimSpecs, simBounds, reduced ? 0 : env.current * 18 * scale, release.motion, anchors,
-    plaqueEl, plaqueIdRef, hudRef, sway,
+    plaqueEl, plaqueIdRef, hudRef, sway, hunt.motion,
   );
   useWeedClock(tankRef, decor.weeds);
   const masked = useMemo(

@@ -1,6 +1,6 @@
 import { bigness, tankWidth } from './fishSize';
 import { decorAnchor, type DecorPlacement } from './tankDecor';
-import { depthFor, habitForSpecies, speedFor, type Anchors } from './tankHabits';
+import { depthFor, habitForSpecies, huntsFor, speedFor, type Anchors } from './tankHabits';
 import { RARITY_RANK, type RosterFish } from './tankPicks';
 import { fishKey } from './tankRelease';
 import type { Bounds, SwimmerSpec } from './tankSim';
@@ -29,6 +29,8 @@ export function specFor(r: RosterFish, fullscreen: boolean, scale: number): Swim
     hoverBias: 1 - tier / 3,
     dartBias: tier / 3,
     habit,
+    // The strip is too small for a chase.
+    hunter: fullscreen && huntsFor(r.species),
   };
 }
 

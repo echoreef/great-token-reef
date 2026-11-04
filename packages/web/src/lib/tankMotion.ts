@@ -12,7 +12,7 @@ export interface Bounds {
   top?: number;
 }
 
-export type SwimMode = 'cruise' | 'hover' | 'dart' | 'turn' | 'feed' | 'drop' | 'leave' | 'rest' | 'ambush';
+export type SwimMode = 'cruise' | 'hover' | 'dart' | 'turn' | 'feed' | 'drop' | 'leave' | 'rest' | 'ambush' | 'hunt';
 
 export interface SwimmerSpec {
   id: string;
@@ -28,6 +28,8 @@ export interface SwimmerSpec {
   dartBias: number;
   /** species habit from the body plan; absent = default swimming */
   habit?: Habit;
+  /** chases and eats smaller fish now and then (full tank only) */
+  hunter?: boolean;
 }
 
 export interface Swimmer extends SwimmerSpec {
@@ -65,6 +67,12 @@ export interface Swimmer extends SwimmerSpec {
   puffUntil: number;
   /** px the fish may currently sit below the sand line; eases back up so leaving rest never snaps */
   sinkPx: number;
+  /** id of the fish a hunter is chasing */
+  quarry: string | null;
+  /** when a hunter next looks for prey; never for a fish that does not hunt */
+  nextHuntAt: number;
+  /** a hunter that has eaten cruises slowly until this time */
+  fullUntil: number;
 }
 
 export const DART_FACTOR = 2.2;
@@ -109,6 +117,11 @@ export function beginTurn(s: Swimmer, now: number): void {
   s.turnStart = now;
   s.turnFrom = s.heading;
   s.target = s.cruise * 0.2;
+}
+
+/** Where bubbles leave the fish: just inside the mouth, in tank px. */
+export function mouthOf(s: Swimmer): { x: number; y: number } {
+  return { x: s.x + s.heading * (s.width / 2 - s.width * 0.08), y: s.y - s.height * 0.05 };
 }
 
 // Resting flatfish lie half-buried; a resting eel's art box may dip into the sand to line up with its crevice.

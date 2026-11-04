@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { ENTRIES, LEGENDARY_DEFS, LEGENDARY_ID_BASE, SPECIES_DEFS } from '@gtr/shared';
+import { PREY_MAX_RATIO } from './tankHunt';
 import type { RosterFish } from './tankPicks';
 import { anchorsFor, bubblesFor, decorFor, planktonFor, populationFor, rosterId, specFor } from './tankScenery';
 
@@ -46,6 +48,24 @@ describe('bubblesFor and planktonFor', () => {
 });
 
 describe('specFor', () => {
+  const blacktip = ENTRIES.findIndex((e) => SPECIES_DEFS[e.s]!.name === 'Blacktip Reef Shark');
+  const tiger = LEGENDARY_ID_BASE + LEGENDARY_DEFS.findIndex((d) => d.name === 'Tiger Shark');
+
+  it('makes sharks hunters in the full tank only', () => {
+    expect(specFor(fish(blacktip), true, 1).hunter).toBe(true);
+    expect(specFor(fish(tiger, 'legendary'), true, 1).hunter).toBe(true);
+    expect(specFor(fish(blacktip), false, 1).hunter).toBe(false);
+    expect(specFor(fish(tiger, 'legendary'), false, 1).hunter).toBe(false);
+    expect(specFor(fish(3), true, 1).hunter).toBe(false);
+  });
+
+  it('draws every legendary too big for any hunter to eat', () => {
+    const species = [...ENTRIES.keys(), ...LEGENDARY_DEFS.map((_, i) => LEGENDARY_ID_BASE + i)];
+    const widths = species.flatMap((sp) => [1, 1000].map((best) => specFor({ ...fish(sp), bestSize: best }, true, 1).width));
+    const smallestLegend = Math.min(...LEGENDARY_DEFS.map((_, i) => specFor(fish(LEGENDARY_ID_BASE + i, 'legendary'), true, 1).width));
+    expect(Math.max(...widths) * PREY_MAX_RATIO).toBeLessThan(smallestLegend);
+  });
+
   it('ids the swimmer by species and shininess', () => {
     expect(specFor(fish(3, 'rare', true), false, 1).id).toBe(rosterId(fish(3, 'rare', true)));
     expect(rosterId(fish(3))).not.toBe(rosterId(fish(3, 'common', true)));

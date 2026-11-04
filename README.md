@@ -78,3 +78,27 @@ Replace `icon.png` in the repo root, then run `pnpm icons`.
 - `GTR_CODEX_SESSIONS_DIR` changes where Codex logs are read from. Without it,
   the Reef reads `sessions` inside `$CODEX_HOME` if set, otherwise `~/.codex`.
 - `GTR_NO_OPEN=1` stops the browser from opening on start.
+
+## Releases
+
+Newest first.
+
+### Shark hunt, November 4, 2026
+
+By [@yglgary](https://github.com/yglgary).
+Pull request: <https://github.com/echoreef/great-token-reef/pull/6>
+
+In the fullscreen tank, sharks and the killer whale now and then hunt a fish no
+more than half their size. Most hunts end in a bite: the fish shrinks into the
+shark's mouth in a puff of flecks and bubbles. About one in three ends with the
+fish darting away. An eaten fish drops back in from the surface 30 seconds
+later, and your collection never changes. The whale shark and megamouth eat
+plankton, so they leave other fish alone.
+
+### Light and dark mode, October 28, 2026
+
+By [@austinbrownapfm](https://github.com/austinbrownapfm).
+Pull request: <https://github.com/echoreef/great-token-reef/pull/4>
+
+A button in the header switches between light and dark mode and remembers your
+choice. With no choice saved, the Reef follows your system setting.

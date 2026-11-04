@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ENTRIES, LEGENDARY_DEFS, LEGENDARY_ID_BASE, SPECIES_DEFS } from '@gtr/shared';
-import { depthFor, habitFor, habitForSpecies, type Anchors, type Habit } from './tankHabits';
+import { depthFor, habitFor, habitForSpecies, huntsFor, type Anchors, type Habit } from './tankHabits';
 import { rocksFor } from '../components/TankRocks';
 import { weedSway } from './tankHabitSteer';
 import { hold, mouthOf, spawn, step, type Bounds, type Swimmer, type SwimmerSpec, type World } from './tankSim';
@@ -96,6 +96,25 @@ describe('habitForSpecies', () => {
   it('matches habitFor for a catalog entry and defaults for an unknown id', () => {
     expect(habitForSpecies(0)).toBe(habitFor(SPECIES_DEFS[ENTRIES[0]!.s]!));
     expect(habitForSpecies(999)).toBe('default');
+  });
+});
+
+describe('huntsFor', () => {
+  it('lets the hunting legendaries hunt and spares the filter feeders', () => {
+    const hunters = LEGENDARY_DEFS.filter((_, i) => huntsFor(LEGENDARY_ID_BASE + i)).map((d) => d.name);
+    expect(hunters).toEqual(['Tiger Shark', 'Great White Shark', 'Killer Whale', 'Greenland Shark']);
+  });
+
+  it('lets every catalog shark hunt and nothing else in the catalog', () => {
+    ENTRIES.forEach((e, i) => {
+      const def = SPECIES_DEFS[e.s]!;
+      expect(huntsFor(i), def.name).toBe(def.plan === 'shark');
+    });
+    expect(ENTRIES.some((e) => SPECIES_DEFS[e.s]!.plan === 'shark')).toBe(true);
+  });
+
+  it('is false for an unknown id', () => {
+    expect(huntsFor(999)).toBe(false);
   });
 });
 

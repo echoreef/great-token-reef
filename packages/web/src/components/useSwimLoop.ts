@@ -5,11 +5,17 @@ import {
   ART_RATIO, WAG_MIN, dropFood, easeWag, isGone, mouthOf, quantizeWag, rescale, spawn, spawnDropIn, step, swimOff, transformOf, wagAnimation,
   type Bounds, type Sway, type Swimmer, type SwimmerSpec, type World,
 } from '../lib/tankSim';
+import { fleckColors, flecksFor, type Fleck } from '../lib/tankChomp';
+import { setHunter, type Meal } from '../lib/tankHunt';
+import type { HuntMotion } from './useTankHunt';
 import type { ReleaseMotion } from './useTankRelease';
 
 const SWELL_SECONDS = 1.5;
 /** Most bubbles and sand puffs alive in the bubble layer at once. */
 const BUBBLE_CAP = 40;
+/** ms an eaten fish takes to shrink into the bite */
+const GULP_MS = 280;
+const FLECKS = 12;
 
 // Owns the simulation + rAF loop. Pauses when the tab is hidden, the tank
 // is scrolled out of view, or the user prefers reduced motion (fish then
@@ -29,6 +35,7 @@ export function useSwimLoop(
   plaqueId: React.RefObject<string | null>,
   hud: React.RefObject<HTMLDivElement | null>,
   sway: Sway,
+  hunt: { readonly current: HuntMotion },
 ) {
   const fishRefs = useRef(new Map<string, HTMLDivElement>());
   const simRef = useRef<Swimmer[]>([]);
@@ -57,7 +64,7 @@ export function useSwimLoop(
 
   // Resize rescales positions in place; a roster change keeps the fish that
   // stayed and spawns only the newcomers, so a fullscreen toggle never
-  // reshuffles the whole tank. Released newcomers drop in from the surface.
+  // reshuffles the whole tank. Released newcomers and eaten fish coming back drop in from the surface.
   useEffect(() => {
     const prev = boundsRef.current;
     boundsRef.current = bounds;
@@ -79,8 +86,10 @@ export function useSwimLoop(
       if (!kept) {
         // Already swam out; React drops its spec on the next render.
         if (leaving.has(spec.id)) return [];
-        const x = dropIns.get(spec.id);
+        const { returns } = hunt.current;
+        const x = dropIns.get(spec.id) ?? returns.get(spec.id);
         dropIns.delete(spec.id);
+        returns.delete(spec.id);
         return [x !== undefined && activeRef.current ? spawnDropIn(spec, bounds, x, Math.random, now) : spawn([spec], bounds, Math.random, now, anchors)[0]!];
       }
       const swell = swells.current.get(spec.id);
@@ -94,12 +103,13 @@ export function useSwimLoop(
       kept.cruise = spec.cruise;
       kept.depth = spec.depth;
       kept.habit = spec.habit;
+      setHunter(kept, spec.hunter, Math.random, now);
       if (leaving.has(spec.id) && kept.mode !== 'leave') swimOff(kept, bounds, now);
       return [kept];
     });
     motion.current.swells.clear();
     for (const id of swells.current.keys()) if (!existing.has(id) || !ids.has(id)) swells.current.delete(id);
-  }, [specs, bounds, motion, anchors]);
+  }, [specs, bounds, motion, hunt, anchors]);
 
   useEffect(() => {
     const el = tankRef.current;
@@ -227,6 +237,48 @@ export function useSwimLoop(
         for (let i = 0; i < n; i++) bubbleAt(layer, e.x + (Math.random() - 0.5) * 8, e.y - i * 4);
       }
     };
+    const fleckAt = (layer: HTMLDivElement, x: number, y: number, f: Fleck) => {
+      if (layer.childElementCount >= BUBBLE_CAP) return;
+      const p = document.createElement('div');
+      p.className = 'reef-fleck';
+      p.style.cssText = `left:${x}px;top:${y}px;width:${f.size}px;height:${f.size}px;margin:${-f.size / 2}px 0 0 ${-f.size / 2}px;background:${f.color}`;
+      layer.appendChild(p);
+      const a = p.animate([
+        { transform: 'translate(0, 0) rotate(0deg)', opacity: 0.95 },
+        { transform: `translate(${f.dx}px, ${f.dy}px) rotate(120deg)`, opacity: 0.85, offset: 0.25 },
+        { transform: `translate(${f.dx * 1.15}px, ${f.dy + f.sink}px) rotate(260deg)`, opacity: 0 },
+      ], { duration: f.ms, easing: 'cubic-bezier(0.2, 0.7, 0.4, 1)', fill: 'forwards' });
+      a.onfinish = () => p.remove();
+      a.oncancel = () => p.remove();
+    };
+    // The eaten fish shrinks into the bite as a copy outside React, so the school can drop the real one at once.
+    const chomp = (m: Meal) => {
+      const el = fishRefs.current.get(m.id);
+      const layer = bubbleLayer.current;
+      let fills: (string | null)[] = [];
+      if (el && layer) {
+        const ghost = el.cloneNode(true) as HTMLElement;
+        ghost.className = 'reef-wag pointer-events-none absolute left-0 top-0';
+        ghost.removeAttribute('role');
+        ghost.removeAttribute('tabindex');
+        layer.appendChild(ghost);
+        fills = [...ghost.querySelectorAll('[fill]')].map((n) => n.getAttribute('fill'));
+        const a = (ghost.firstElementChild as HTMLElement | null)?.animate(
+          [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(0.2)', opacity: 0 }],
+          { duration: GULP_MS, easing: 'ease-in', fill: 'forwards' },
+        );
+        if (a) {
+          a.onfinish = () => ghost.remove();
+          a.oncancel = () => ghost.remove();
+        } else ghost.remove();
+      }
+      // Gone from the sim already; React drops it from the school on the next render.
+      el?.style.setProperty('visibility', 'hidden');
+      if (!layer) return;
+      for (const f of flecksFor(fleckColors(fills), Math.random, FLECKS)) fleckAt(layer, m.x, m.y, f);
+      const n = 6 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < n; i++) bubbleAt(layer, m.x + (Math.random() - 0.5) * 24, m.y + (Math.random() - 0.5) * 16 - i * 3);
+    };
     const grow = (now: number) => {
       for (const s of simRef.current) {
         const sw = swells.current.get(s.id);
@@ -254,6 +306,10 @@ export function useSwimLoop(
       paint(t / 1000);
       blow(dt);
       puff(events.eaten);
+      for (const m of events.meals) {
+        chomp(m);
+        hunt.current.onMeal(m);
+      }
       raf = requestAnimationFrame(tick);
     };
     if (active) raf = requestAnimationFrame(tick);
@@ -264,7 +320,7 @@ export function useSwimLoop(
       paint(performance.now() / 1000);
     }
     return () => cancelAnimationFrame(raf);
-  }, [active, specs, bounds, motion, bubbleLayer, flakeLayer, plaqueEl, plaqueId, hud]);
+  }, [active, specs, bounds, motion, hunt, bubbleLayer, flakeLayer, plaqueEl, plaqueId, hud]);
 
   return { fishRefs, simRef, feed };
 }
