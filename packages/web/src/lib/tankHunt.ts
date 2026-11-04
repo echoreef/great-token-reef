@@ -6,6 +6,8 @@ import type { Rng } from './tankMotion';
 /** seconds between one hunt and the next: 2 to 5 minutes */
 export const HUNT_GAP_MIN = 120;
 export const HUNT_GAP_SPAN = 180;
+/** prey is at most this share of the hunter's width, which also keeps every legendary safe */
+export const PREY_MAX_RATIO = 0.5;
 
 /** When a hunter next looks for prey. */
 export function nextHuntTime(rng: Rng, now: number): number {
