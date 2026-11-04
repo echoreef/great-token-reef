@@ -23,6 +23,8 @@ export const ESCAPE_SECONDS = 1.2;
 /** a hunter that has eaten cruises at this share of its speed for FULL_SECONDS */
 export const FULL_SECONDS = 10;
 export const FULL_FACTOR = 0.6;
+/** seconds an eaten fish is away before it drops back in */
+export const DIGEST_SECONDS = 30;
 
 export interface Meal {
   id: string;
@@ -77,6 +79,12 @@ export function huntTick(s: Swimmer, swimmers: readonly Swimmer[], rng: Rng, now
   // Hovered, open on its plaque or swimming out: the hunter's own mode won.
   if (s.mode !== 'hunt') {
     endHunt(s, rng, now);
+    return null;
+  }
+  // Full screen left or a release began.
+  if (!s.hunter) {
+    endHunt(s, rng, now);
+    cruise(s, rng, now);
     return null;
   }
   const q = swimmers.find((f) => f.id === s.quarry);
@@ -145,4 +153,23 @@ function flee(q: Swimmer, fromX: number, now: number): void {
   }
   beginTurn(q, now);
   q.resume = { mode: 'dart', until: now + 0.5 + ESCAPE_SECONDS };
+}
+
+export type DigestEvent =
+  | { kind: 'meal' | 'back'; id: string }
+  | { kind: 'roster'; ids: ReadonlySet<string> }
+  | { kind: 'clear' };
+
+/** Fish a hunter has eaten and not yet given back; the same set when nothing changes. */
+export function digest(eaten: ReadonlySet<string>, e: DigestEvent): ReadonlySet<string> {
+  switch (e.kind) {
+    case 'meal':
+      return eaten.has(e.id) ? eaten : new Set([...eaten, e.id]);
+    case 'back':
+      return eaten.has(e.id) ? new Set([...eaten].filter((id) => id !== e.id)) : eaten;
+    case 'roster':
+      return [...eaten].every((id) => e.ids.has(id)) ? eaten : new Set([...eaten].filter((id) => e.ids.has(id)));
+    case 'clear':
+      return eaten.size ? new Set() : eaten;
+  }
 }

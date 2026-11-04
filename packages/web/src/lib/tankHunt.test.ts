@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  ESCAPE_CHANCE, FULL_FACTOR, FULL_SECONDS, HUNT_GAP_MIN, HUNT_GAP_SPAN, HUNT_GIVE_UP, HUNT_RADIUS_FRAC, HUNT_RETRY, MIN_TANK, pickPrey,
+  ESCAPE_CHANCE, FULL_FACTOR, FULL_SECONDS, HUNT_GAP_MIN, HUNT_GAP_SPAN, HUNT_GIVE_UP, HUNT_RADIUS_FRAC, HUNT_RETRY, MIN_TANK, digest, pickPrey,
 } from './tankHunt';
 import { hold, mouthOf, spawn, step, swimOff, type Bounds, type StepEvents, type Swimmer, type SwimmerSpec } from './tankSim';
 
@@ -246,6 +246,15 @@ describe('hunting', () => {
     expect(h.shark.mode).toBe('hover');
   });
 
+  it('gives up when the hunter stops being a hunter (full screen left, or a release started)', () => {
+    const h = hunt(3);
+    h.tick();
+    h.shark.hunter = false;
+    h.tick();
+    expect(h.shark.quarry).toBeNull();
+    expect(h.shark.mode).not.toBe('hunt');
+  });
+
   it('keeps hunting through a turn when the prey is behind', () => {
     const fish = tank(['behind', 60, -200], ...filler);
     const shark = fish[0]!;
@@ -297,5 +306,33 @@ describe('hunting', () => {
     expect(escapes / (meals + escapes)).toBeGreaterThan(0.1);
     expect(escapes / (meals + escapes)).toBeLessThan(0.5);
     expect(meals + escapes + giveUps).toBe(60);
+  });
+});
+
+describe('digest', () => {
+  const none: ReadonlySet<string> = new Set();
+
+  it('holds an eaten fish until it comes back', () => {
+    const eaten = digest(none, { kind: 'meal', id: 'a' });
+    expect([...eaten]).toEqual(['a']);
+    expect([...digest(eaten, { kind: 'back', id: 'a' })]).toEqual([]);
+  });
+
+  it('forgets a fish that left the roster while it was eaten', () => {
+    const eaten = digest(digest(none, { kind: 'meal', id: 'a' }), { kind: 'meal', id: 'b' });
+    expect([...digest(eaten, { kind: 'roster', ids: new Set(['b', 'c']) })]).toEqual(['b']);
+  });
+
+  it('lets every fish back at once when hunting stops', () => {
+    const eaten = digest(digest(none, { kind: 'meal', id: 'a' }), { kind: 'meal', id: 'b' });
+    expect(digest(eaten, { kind: 'clear' }).size).toBe(0);
+  });
+
+  it('keeps the same set when nothing changes, so the tank does not re-render', () => {
+    const eaten = digest(none, { kind: 'meal', id: 'a' });
+    expect(digest(eaten, { kind: 'meal', id: 'a' })).toBe(eaten);
+    expect(digest(eaten, { kind: 'back', id: 'z' })).toBe(eaten);
+    expect(digest(eaten, { kind: 'roster', ids: new Set(['a']) })).toBe(eaten);
+    expect(digest(none, { kind: 'clear' })).toBe(none);
   });
 });
