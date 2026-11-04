@@ -5,6 +5,7 @@ import {
   ART_RATIO, WAG_MIN, dropFood, easeWag, isGone, mouthOf, quantizeWag, rescale, spawn, spawnDropIn, step, swimOff, transformOf, wagAnimation,
   type Bounds, type Sway, type Swimmer, type SwimmerSpec, type World,
 } from '../lib/tankSim';
+import type { HuntMotion } from './useTankHunt';
 import type { ReleaseMotion } from './useTankRelease';
 
 const SWELL_SECONDS = 1.5;
@@ -29,6 +30,7 @@ export function useSwimLoop(
   plaqueId: React.RefObject<string | null>,
   hud: React.RefObject<HTMLDivElement | null>,
   sway: Sway,
+  hunt: { readonly current: HuntMotion },
 ) {
   const fishRefs = useRef(new Map<string, HTMLDivElement>());
   const simRef = useRef<Swimmer[]>([]);
@@ -57,7 +59,7 @@ export function useSwimLoop(
 
   // Resize rescales positions in place; a roster change keeps the fish that
   // stayed and spawns only the newcomers, so a fullscreen toggle never
-  // reshuffles the whole tank. Released newcomers drop in from the surface.
+  // reshuffles the whole tank. Released newcomers and eaten fish coming back drop in from the surface.
   useEffect(() => {
     const prev = boundsRef.current;
     boundsRef.current = bounds;
@@ -79,8 +81,10 @@ export function useSwimLoop(
       if (!kept) {
         // Already swam out; React drops its spec on the next render.
         if (leaving.has(spec.id)) return [];
-        const x = dropIns.get(spec.id);
+        const { returns } = hunt.current;
+        const x = dropIns.get(spec.id) ?? returns.get(spec.id);
         dropIns.delete(spec.id);
+        returns.delete(spec.id);
         return [x !== undefined && activeRef.current ? spawnDropIn(spec, bounds, x, Math.random, now) : spawn([spec], bounds, Math.random, now, anchors)[0]!];
       }
       const swell = swells.current.get(spec.id);
@@ -94,12 +98,13 @@ export function useSwimLoop(
       kept.cruise = spec.cruise;
       kept.depth = spec.depth;
       kept.habit = spec.habit;
+      kept.hunter = spec.hunter;
       if (leaving.has(spec.id) && kept.mode !== 'leave') swimOff(kept, bounds, now);
       return [kept];
     });
     motion.current.swells.clear();
     for (const id of swells.current.keys()) if (!existing.has(id) || !ids.has(id)) swells.current.delete(id);
-  }, [specs, bounds, motion, anchors]);
+  }, [specs, bounds, motion, hunt, anchors]);
 
   useEffect(() => {
     const el = tankRef.current;
@@ -227,6 +232,12 @@ export function useSwimLoop(
         for (let i = 0; i < n; i++) bubbleAt(layer, e.x + (Math.random() - 0.5) * 8, e.y - i * 4);
       }
     };
+    const chomp = (m: { x: number; y: number }) => {
+      const layer = bubbleLayer.current;
+      if (!layer) return;
+      const n = 6 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < n; i++) bubbleAt(layer, m.x + (Math.random() - 0.5) * 24, m.y + (Math.random() - 0.5) * 16 - i * 3);
+    };
     const grow = (now: number) => {
       for (const s of simRef.current) {
         const sw = swells.current.get(s.id);
@@ -254,6 +265,12 @@ export function useSwimLoop(
       paint(t / 1000);
       blow(dt);
       puff(events.eaten);
+      for (const m of events.meals) {
+        // Gone from the sim already; hide it until React drops it from the school.
+        fishRefs.current.get(m.id)?.style.setProperty('visibility', 'hidden');
+        chomp(m);
+        hunt.current.onMeal(m);
+      }
       raf = requestAnimationFrame(tick);
     };
     if (active) raf = requestAnimationFrame(tick);
@@ -264,7 +281,7 @@ export function useSwimLoop(
       paint(performance.now() / 1000);
     }
     return () => cancelAnimationFrame(raf);
-  }, [active, specs, bounds, motion, bubbleLayer, flakeLayer, plaqueEl, plaqueId, hud]);
+  }, [active, specs, bounds, motion, hunt, bubbleLayer, flakeLayer, plaqueEl, plaqueId, hud]);
 
   return { fishRefs, simRef, feed };
 }

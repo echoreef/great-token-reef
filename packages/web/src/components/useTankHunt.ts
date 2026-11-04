@@ -7,6 +7,8 @@ import { DIGEST_SECONDS, digest, type DigestEvent, type Meal } from '../lib/tank
 export interface HuntMotion { returns: Map<string, number>; onMeal: (meal: Meal) => void }
 
 const NONE: ReadonlySet<string> = new Set();
+/** Somewhere across the middle of the surface. */
+const surfaceX = (width: number) => width * (0.1 + Math.random() * 0.8);
 
 /** `on`: sharks are hunting (full tank, no release playing); `ids`: the roster's swimmer ids. */
 export function useTankHunt(on: boolean, ids: ReadonlySet<string>, width: number) {
@@ -31,21 +33,20 @@ export function useTankHunt(on: boolean, ids: ReadonlySet<string>, width: number
         timers.current.delete(t);
         // Released or re-picked meanwhile: nothing comes back.
         if (!eatenRef.current.has(id)) return;
-        const w = widthRef.current;
-        motion.current.returns.set(id, w * (0.1 + Math.random() * 0.8));
+        motion.current.returns.set(id, surfaceX(widthRef.current));
         commit({ kind: 'back', id });
       }, DIGEST_SECONDS * 1000);
       timers.current.add(t);
     },
   });
 
-  // Leaving the full tank, a release starting or unmounting gives every fish back at once.
+  // Leaving the full tank or a release starting drops every eaten fish back in at once.
   useEffect(() => {
     if (on) return;
     const live = timers.current;
     for (const t of live) window.clearTimeout(t);
     live.clear();
-    motion.current.returns.clear();
+    for (const id of eatenRef.current) motion.current.returns.set(id, surfaceX(widthRef.current));
     commit({ kind: 'clear' });
   }, [on, commit]);
   useEffect(() => {
