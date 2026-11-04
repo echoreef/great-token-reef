@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@gtr/shared": "workspace:*",
-    "@hono/node-server": "^1.14.0",
+    "@hono/node-server": "^2.1.3",
     "hono": "^4.7.0",
     "tsx": "^4.19.0",
     "zod": "^4.4.3"
