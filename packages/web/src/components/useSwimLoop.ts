@@ -5,6 +5,7 @@ import {
   ART_RATIO, WAG_MIN, dropFood, easeWag, isGone, mouthOf, quantizeWag, rescale, spawn, spawnDropIn, step, swimOff, transformOf, wagAnimation,
   type Bounds, type Sway, type Swimmer, type SwimmerSpec, type World,
 } from '../lib/tankSim';
+import { setHunter } from '../lib/tankHunt';
 import type { HuntMotion } from './useTankHunt';
 import type { ReleaseMotion } from './useTankRelease';
 
@@ -98,7 +99,7 @@ export function useSwimLoop(
       kept.cruise = spec.cruise;
       kept.depth = spec.depth;
       kept.habit = spec.habit;
-      kept.hunter = spec.hunter;
+      setHunter(kept, spec.hunter, Math.random, now);
       if (leaving.has(spec.id) && kept.mode !== 'leave') swimOff(kept, bounds, now);
       return [kept];
     });

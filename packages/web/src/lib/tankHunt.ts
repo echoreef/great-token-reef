@@ -173,3 +173,9 @@ export function digest(eaten: ReadonlySet<string>, e: DigestEvent): ReadonlySet<
       return eaten.size ? new Set() : eaten;
   }
 }
+
+/** Turn hunting on or off; a fish that becomes a hunter first hunts 2 to 5 minutes later. */
+export function setHunter(s: Swimmer, on: boolean | undefined, rng: Rng, now: number): void {
+  if (on && !s.hunter) s.nextHuntAt = nextHuntTime(rng, now);
+  s.hunter = on;
+}

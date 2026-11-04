@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  ESCAPE_CHANCE, FULL_FACTOR, FULL_SECONDS, HUNT_GAP_MIN, HUNT_GAP_SPAN, HUNT_GIVE_UP, HUNT_RADIUS_FRAC, HUNT_RETRY, MIN_TANK, digest, pickPrey,
+  ESCAPE_CHANCE, FULL_FACTOR, FULL_SECONDS, HUNT_GAP_MIN, HUNT_GAP_SPAN, HUNT_GIVE_UP, HUNT_RADIUS_FRAC, HUNT_RETRY, MIN_TANK, digest, pickPrey, setHunter,
 } from './tankHunt';
 import { hold, mouthOf, spawn, step, swimOff, type Bounds, type StepEvents, type Swimmer, type SwimmerSpec } from './tankSim';
 
@@ -61,6 +61,27 @@ function tank(...prey: [string, number, number][]): Swimmer[] {
   return fish;
 }
 const filler: [string, number, number][] = [['a', 60, 600], ['b', 60, -620], ['c', 60, 650]];
+
+describe('setHunter', () => {
+  it('schedules the first hunt 2 to 5 minutes out for a fish that becomes a hunter', () => {
+    // Kept from the strip tank, or swimming since a release began: it was never a hunter.
+    const [shark] = spawn([spec('shark', 200)], bounds, rng(1), 0);
+    expect(shark!.nextHuntAt).toBe(Number.POSITIVE_INFINITY);
+    setHunter(shark!, true, rng(2), 50);
+    expect(shark!.hunter).toBe(true);
+    expect(shark!.nextHuntAt).toBeGreaterThanOrEqual(50 + HUNT_GAP_MIN);
+    expect(shark!.nextHuntAt).toBeLessThan(50 + HUNT_GAP_MIN + HUNT_GAP_SPAN);
+  });
+
+  it('keeps the schedule of a fish that already hunts, and stops one that no longer does', () => {
+    const [shark] = spawn([spec('shark', 200, { hunter: true })], bounds, rng(1), 0);
+    const due = shark!.nextHuntAt;
+    setHunter(shark!, true, rng(2), 50);
+    expect(shark!.nextHuntAt).toBe(due);
+    setHunter(shark!, false, rng(2), 60);
+    expect(shark!.hunter).toBe(false);
+  });
+});
 
 describe('pickPrey', () => {
   it('picks the nearest eligible fish', () => {
