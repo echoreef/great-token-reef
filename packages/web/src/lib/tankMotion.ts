@@ -119,6 +119,11 @@ export function beginTurn(s: Swimmer, now: number): void {
   s.target = s.cruise * 0.2;
 }
 
+/** Where bubbles leave the fish: just inside the mouth, in tank px. */
+export function mouthOf(s: Swimmer): { x: number; y: number } {
+  return { x: s.x + s.heading * (s.width / 2 - s.width * 0.08), y: s.y - s.height * 0.05 };
+}
+
 // Resting flatfish lie half-buried; a resting eel's art box may dip into the sand to line up with its crevice.
 export function sinkOf(s: Swimmer): number {
   if (s.mode !== 'rest') return 0;

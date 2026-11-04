@@ -4,16 +4,16 @@
 // rendered scaleX is -heading; `flip` is the tweened value during a turn.
 
 import {
-  DART_FACTOR, beginTurn, ceilingOf, clamp, clampX, clampY, depthY, floorOf, rollMode, sinkOf,
+  DART_FACTOR, beginTurn, ceilingOf, clamp, clampX, clampY, depthY, floorOf, mouthOf, rollMode, sinkOf,
   type Bounds, type Rng, type Swimmer, type SwimmerSpec,
 } from './tankMotion';
 import { habitTick, placeHabit, rollHabit, type Sway } from './tankHabitSteer';
-import { nextHuntTime } from './tankHunt';
+import { FULL_FACTOR, HUNT_FACTOR, huntTick, nextHuntTime, startHunt, strike, type Meal } from './tankHunt';
 import type { Anchors, Habit } from './tankHabits';
 
 export type { Bounds, Rng, SwimMode, Swimmer, SwimmerSpec } from './tankMotion';
 export type { Sway } from './tankHabitSteer';
-export { DART_FACTOR, HOLD_CURRENT, SAND_SINK, ceilingOf, depthY } from './tankMotion';
+export { DART_FACTOR, HOLD_CURRENT, SAND_SINK, ceilingOf, depthY, mouthOf } from './tankMotion';
 
 export const ART_RATIO = 180 / 320;
 export const TURN_SECONDS = 0.45;
@@ -80,6 +80,8 @@ export interface World {
 
 export interface StepEvents {
   eaten: { x: number; y: number }[];
+  /** fish a hunter ate this step; already gone from the swimmers */
+  meals: Meal[];
 }
 
 let nextFlakeId = 1;
@@ -207,34 +209,37 @@ export function isGone(s: Swimmer, bounds: Bounds): boolean {
 export function step(swimmers: Swimmer[], bounds: Bounds, dtRaw: number, rng: Rng, now: number, world?: World): StepEvents {
   const dt = Math.min(MAX_DT, Math.max(0, dtRaw));
   const drift = world?.current ?? 0;
-  const events: StepEvents = { eaten: [] };
+  const events: StepEvents = { eaten: [], meals: [] };
   if (world) stepFlakes(world.flakes, bounds, dt, now);
   for (const s of swimmers) {
     if (s.mode === 'drop') {
       stepDrop(s, bounds, dt, rng, now);
       continue;
     }
-    const prey = world && s.mode !== 'turn' && s.mode !== 'leave' && Number.isFinite(s.modeUntil) ? preyFor(s, world.flakes, bounds, now) : null;
+    const quarry = huntTick(s, swimmers, rng, now);
+    // A hunt in progress, mid-turn included, ignores food.
+    const prey = world && s.quarry === null && s.mode !== 'turn' && s.mode !== 'leave' && Number.isFinite(s.modeUntil) ? preyFor(s, world.flakes, bounds, now) : null;
     if (prey) chase(s, prey, now);
     else if (s.mode === 'feed') {
       s.mode = 'cruise';
       s.modeUntil = now + 2 + rng() * 4;
       s.target = s.cruise;
     }
-    // Habits steer only outside the v3 modes; feed, drop, leave, turn and a held hover win.
-    const free = s.mode !== 'turn' && s.mode !== 'feed' && s.mode !== 'leave';
+    // Habits steer only outside the v3 modes; feed, hunt, drop, leave, turn and a held hover win.
+    const free = s.mode !== 'turn' && s.mode !== 'feed' && s.mode !== 'leave' && s.mode !== 'hunt';
     if (free && s.habit && Number.isFinite(s.modeUntil)) habitTick(s, bounds, rng, now, drift, world?.anchors, world?.sway);
     // habitTick may have started a turn.
     if (free && s.mode !== 'turn' && now >= s.modeUntil) {
-      if (!rollHabit(s, bounds, rng, now, drift, world?.anchors)) rollMode(s, rng, now);
+      if (!startHunt(s, swimmers, bounds, now) && !rollHabit(s, bounds, rng, now, drift, world?.anchors)) rollMode(s, rng, now);
     }
     if (s.mode === 'leave') advanceLeave(s, now);
     else if (s.mode === 'turn') advanceTurn(s, rng, now);
-    // A feeding fish may chase a flake to the glass; the clamp holds it in. A resting fish is parked.
-    else if (s.mode !== 'feed' && s.mode !== 'rest' && nearWall(s, bounds, s.habit === 'pelagic' ? WALL_MARGIN * 2 : WALL_MARGIN)) beginTurn(s, now);
+    // A feeding or hunting fish may chase to the glass; the clamp holds it in. A resting fish is parked.
+    else if (s.mode !== 'feed' && s.mode !== 'hunt' && s.mode !== 'rest' && nearWall(s, bounds, s.habit === 'pelagic' ? WALL_MARGIN * 2 : WALL_MARGIN)) beginTurn(s, now);
 
     wanderSpeed(s, rng, dt);
-    const accel = s.mode === 'dart' || s.mode === 'feed' ? 6 : s.mode === 'ambush' ? 4 : s.mode === 'rest' ? 3 : 2.2;
+    if (now < s.fullUntil) s.target = Math.min(s.target, s.cruise * FULL_FACTOR);
+    const accel = s.mode === 'dart' || s.mode === 'feed' || s.mode === 'hunt' ? 6 : s.mode === 'ambush' ? 4 : s.mode === 'rest' ? 3 : 2.2;
     const goalVx = s.target * s.heading;
     s.vx += (goalVx - s.vx) * Math.min(1, accel * dt);
 
@@ -243,10 +248,11 @@ export function step(swimmers: Swimmer[], bounds: Bounds, dtRaw: number, rng: Rn
     const [dMin, dMax] = s.depth;
     const home = depthY(s, bounds, (dMin + dMax) / 2 + Math.sin(s.phase) * ((dMax - dMin) / 2)) - s.liftPx;
     const ceiling = ceilingOf(s, bounds);
-    if (prey && s.mode === 'feed') {
-      const reach = s.cruise * DART_FACTOR;
-      // Food above the band is chased only to the ceiling (the mouth sits 0.05 of the height above centre).
-      const preyY = ceiling ? Math.max(prey.y, ceiling + s.height * 0.45) : prey.y;
+    const target = quarry ?? (prey && s.mode === 'feed' ? prey : null);
+    if (target) {
+      const reach = s.cruise * (quarry ? HUNT_FACTOR : DART_FACTOR);
+      // Food or prey above the band is chased only to the ceiling (the mouth sits 0.05 of the height above centre).
+      const preyY = ceiling ? Math.max(target.y, ceiling + s.height * 0.45) : target.y;
       const goalVy = clamp((preyY - mouthOf(s).y) * 3, -reach, reach);
       s.vy += (goalVy - s.vy) * Math.min(1, 4 * dt);
     } else if (s.goalY !== null && s.mode !== 'feed') {
@@ -273,6 +279,7 @@ export function step(swimmers: Swimmer[], bounds: Bounds, dtRaw: number, rng: Rn
   // Separation nudges x after the clamp; a current piles fish on the downstream wall.
   for (const s of swimmers) if (s.mode !== 'leave') s.x = clampX(s.x, s.width, bounds);
   if (world) eat(swimmers, world, events);
+  strike(swimmers, rng, now, events.meals);
   return events;
 }
 
@@ -372,11 +379,6 @@ export function hold(s: Swimmer, on: boolean, now: number): void {
   }
 }
 
-/** Where bubbles leave the fish: just inside the mouth, in tank px. */
-export function mouthOf(s: Swimmer): { x: number; y: number } {
-  return { x: s.x + s.heading * (s.width / 2 - s.width * 0.08), y: s.y - s.height * 0.05 };
-}
-
 /** Transform string for a swimmer whose element is positioned at 0,0; `now` drives the puff. */
 export function transformOf(s: Swimmer, now?: number): string {
   const x = s.x - s.width / 2;
@@ -425,7 +427,7 @@ function advanceTurn(s: Swimmer, rng: Rng, now: number): void {
     if (s.resume) {
       s.mode = s.resume.mode;
       s.modeUntil = s.resume.until;
-      s.target = s.mode === 'ambush' ? s.cruise * 0.03 : 0;
+      s.target = s.mode === 'ambush' ? s.cruise * 0.03 : s.mode === 'dart' ? s.cruise * DART_FACTOR : 0;
       s.resume = null;
       return;
     }
@@ -455,7 +457,8 @@ function separate(swimmers: Swimmer[], dt: number): void {
       const dx = b.x - a.x;
       const dy = b.y - a.y;
       const d = Math.hypot(dx, dy);
-      if (d === 0 || d > SEPARATION_PX) continue;
+      // A hunter has to reach its prey.
+      if (d === 0 || d > SEPARATION_PX || a.quarry === b.id || b.quarry === a.id) continue;
       const push = ((SEPARATION_PX - d) / SEPARATION_PX) * 40 * dt;
       const ux = dx / d;
       const uy = dy / d;
