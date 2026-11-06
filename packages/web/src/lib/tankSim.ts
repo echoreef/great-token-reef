@@ -8,7 +8,7 @@ import {
   type Bounds, type Rng, type Swimmer, type SwimmerSpec,
 } from './tankMotion';
 import { habitTick, placeHabit, rollHabit, type Sway } from './tankHabitSteer';
-import { FULL_FACTOR, HUNT_FACTOR, huntTick, nextHuntTime, startHunt, strike, type Meal } from './tankHunt';
+import { FULL_FACTOR, HUNT_FACTOR, huntTick, nextHuntTime, shyAway, startHunt, strike, type Meal } from './tankHunt';
 import type { Anchors, Habit } from './tankHabits';
 
 export type { Bounds, Rng, SwimMode, Swimmer, SwimmerSpec } from './tankMotion';
@@ -228,7 +228,8 @@ export function step(swimmers: Swimmer[], bounds: Bounds, dtRaw: number, rng: Rn
     // Habits steer only outside the v3 modes; feed, hunt, drop, leave, turn and a held hover win.
     const free = s.mode !== 'turn' && s.mode !== 'feed' && s.mode !== 'leave' && s.mode !== 'hunt';
     if (free && s.habit && Number.isFinite(s.modeUntil)) habitTick(s, bounds, rng, now, drift, world?.anchors, world?.sway);
-    // habitTick may have started a turn.
+    if (free && s.mode !== 'turn') shyAway(s, swimmers, bounds, rng, dt, now);
+    // habitTick or shyAway may have started a turn.
     if (free && s.mode !== 'turn' && now >= s.modeUntil) {
       if (!startHunt(s, swimmers, bounds, now) && !rollHabit(s, bounds, rng, now, drift, world?.anchors)) rollMode(s, rng, now);
     }
