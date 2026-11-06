@@ -1,7 +1,7 @@
 // A hunter now and then chases a smaller fish and eats it, or the fish gets
 // away. Pure like tankSim.ts; the swim loop removes eaten fish and brings them back.
 
-import { DART_FACTOR, beginTurn, clamp, mouthOf, type Bounds, type Rng, type Swimmer } from './tankMotion';
+import { DART_FACTOR, beginTurn, clamp, mouthOf, type Bounds, type Rng, type SwimMode, type Swimmer } from './tankMotion';
 
 /** seconds between one hunt and the next: 2 to 5 minutes */
 export const HUNT_GAP_MIN = 120;
@@ -25,6 +25,14 @@ export const FULL_SECONDS = 10;
 export const FULL_FACTOR = 0.6;
 /** seconds an eaten fish is away before it drops back in */
 export const DIGEST_SECONDS = 30;
+/** a fish a hunter could eat looks this share of the tank's width ahead for one */
+export const WARY_RADIUS_FRAC = 0.25;
+/** chance per second that it turns away from a hunter right at its nose; none at the edge of sight */
+export const WARY_RATE = 0.35;
+/** chance per second that it darts off a hunter it touches, whichever way it faces */
+export const WARY_TOUCH_RATE = 1;
+
+const WARY_MODES: ReadonlySet<SwimMode> = new Set(['cruise', 'hover', 'dart']);
 
 export interface Meal {
   id: string;
@@ -55,6 +63,36 @@ export function pickPrey(hunter: Swimmer, swimmers: readonly Swimmer[], bounds: 
     }
   }
   return best;
+}
+
+/** A fish a hunter could eat may dart off from one it touches, or turn and dart from one ahead, more likely the closer it is; true = it fled. */
+export function shyAway(s: Swimmer, swimmers: readonly Swimmer[], bounds: Bounds, rng: Rng, dt: number, now: number): boolean {
+  // Food, a home, a hover and a turn already under way all win.
+  if (s.hunter || !WARY_MODES.has(s.mode) || !Number.isFinite(s.modeUntil)) return false;
+  // The chased fish keeps the hunt's own escape roll, so hunts still mostly end in a strike.
+  if (swimmers.some((h) => h.quarry === s.id)) return false;
+  const sight = WARY_RADIUS_FRAC * bounds.width;
+  let gap = sight;
+  let ahead: Swimmer | null = null;
+  let touching: Swimmer | null = null;
+  for (const h of swimmers) {
+    if (!h.hunter || s.width > h.width * PREY_MAX_RATIO) continue;
+    const dx = h.x - s.x;
+    const dy = Math.abs(h.y - s.y);
+    if (Math.abs(dx) < (h.width + s.width) / 2 && dy < (h.height + s.height) / 2) touching ??= h;
+    const g = dx * s.heading - (h.width + s.width) / 2;
+    if (dx * s.heading > 0 && dy <= h.height && Math.max(0, g) < gap) {
+      gap = Math.max(0, g);
+      ahead = h;
+    }
+  }
+  const from = touching ?? ahead;
+  // No draw unless a hunter is in sight, so a tank without one keeps its random sequence.
+  if (!from) return false;
+  const rate = touching ? WARY_TOUCH_RATE : WARY_RATE * (1 - gap / sight);
+  if (rng() >= 1 - Math.exp(-rate * dt)) return false;
+  flee(s, from.x, now);
+  return true;
 }
 
 /** Once its hunt time has come, a hunter whose mode ran out looks for prey; true = it is hunting now. */

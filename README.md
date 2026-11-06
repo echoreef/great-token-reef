@@ -83,6 +83,18 @@ Replace `icon.png` in the repo root, then run `pnpm icons`.
 
 Newest first.
 
+### Wary fish, November 6, 2026
+
+By [@yglgary](https://github.com/yglgary).
+Pull request: <https://github.com/echoreef/great-token-reef/pull/7>
+
+In the fullscreen tank, a fish small enough for a shark or the killer whale to
+eat now tends to turn and dart off rather than swim straight at one. The closer
+the shark, the likelier the turn, but it is only a habit: now and then a fish
+swims right past. A fish that bumps into a shark from any side often darts
+away too. A fish already being chased, eating, resting at home or held under
+the pointer pays no attention.
+
 ### Shark hunt, November 4, 2026
 
 By [@yglgary](https://github.com/yglgary).

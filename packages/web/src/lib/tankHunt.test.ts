@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  ESCAPE_CHANCE, FULL_FACTOR, FULL_SECONDS, HUNT_GAP_MIN, HUNT_GAP_SPAN, HUNT_GIVE_UP, HUNT_RADIUS_FRAC, HUNT_RETRY, MIN_TANK, digest, pickPrey, setHunter,
+  ESCAPE_CHANCE, FULL_FACTOR, FULL_SECONDS, HUNT_GAP_MIN, HUNT_GAP_SPAN, HUNT_GIVE_UP, HUNT_RADIUS_FRAC, HUNT_RETRY, MIN_TANK, PREY_MAX_RATIO,
+  WARY_RADIUS_FRAC, WARY_TOUCH_RATE, digest, pickPrey, setHunter, shyAway,
 } from './tankHunt';
 import { hold, mouthOf, spawn, step, swimOff, type Bounds, type StepEvents, type Swimmer, type SwimmerSpec } from './tankSim';
 
@@ -327,6 +328,130 @@ describe('hunting', () => {
     expect(escapes / (meals + escapes)).toBeGreaterThan(0.1);
     expect(escapes / (meals + escapes)).toBeLessThan(0.5);
     expect(meals + escapes + giveUps).toBe(60);
+  });
+});
+
+// A small fish cruising right, `gap` px of water between its nose and a resting shark's tail.
+function approach(gap: number, fishWidth = 60, dy = 0) {
+  const [shark, fish] = spawn([spec('shark', 200, { hunter: true }), spec('fish', fishWidth)], bounds, rng(1), 0);
+  Object.assign(shark!, { x: 1200, y: 300, nextHuntAt: Number.POSITIVE_INFINITY });
+  Object.assign(fish!, { x: 1200 - 100 - fishWidth / 2 - gap, y: 300 + dy, heading: 1, flip: -1, mode: 'cruise', modeUntil: 1e6 });
+  return [shark!, fish!] as const;
+}
+const always = () => 0;
+
+describe('shyAway', () => {
+  it('turns a small fish away from a shark just ahead of it, then darts off', () => {
+    const [shark, fish] = approach(20);
+    expect(shyAway(fish, [shark, fish], bounds, always, DT, 1)).toBe(true);
+    expect(fish.mode).toBe('turn');
+    expect(fish.resume?.mode).toBe('dart');
+    let now = 1;
+    for (let i = 0; i < 40; i++) step([shark, fish], bounds, DT, () => 0.5, (now += DT));
+    expect(fish.heading).toBe(-1);
+    expect(fish.mode).toBe('dart');
+    expect(fish.target).toBeGreaterThan(fish.cruise);
+  });
+
+  it('darts straight off from a shark it touches while facing away', () => {
+    const [shark, fish] = approach(-40);
+    Object.assign(fish, { heading: -1, flip: 1 });
+    expect(shyAway(fish, [shark, fish], bounds, always, DT, 1)).toBe(true);
+    expect(fish.mode).toBe('dart');
+    expect(fish.heading).toBe(-1);
+  });
+
+  it('darts off a shark it touches from below, turning first to face away from it', () => {
+    // Boxes overlap by a few px: shark 112.5 tall, fish 33.75.
+    const [shark, fish] = approach(0, 60, 70);
+    Object.assign(fish, { x: shark.x + 30, heading: -1, flip: 1 });
+    expect(shyAway(fish, [shark, fish], bounds, always, DT, 1)).toBe(true);
+    expect(fish.mode).toBe('turn');
+    expect(fish.resume?.mode).toBe('dart');
+    let now = 1;
+    while (fish.mode === 'turn') step([shark, fish], bounds, DT, () => 0.5, (now += DT));
+    expect(fish.heading).toBe(1);
+    expect(fish.mode).toBe('dart');
+  });
+
+  it('darts off a touching shark only some of the time', () => {
+    let fled = 0;
+    const runs = 200;
+    for (let seed = 1; seed <= runs; seed++) {
+      const r = rng(seed);
+      const [shark, fish] = approach(-40);
+      Object.assign(fish, { heading: -1, flip: 1 });
+      // One second of touching.
+      for (let i = 0; i < 60 && !shyAway(fish, [shark, fish], bounds, r, DT, 1); i++);
+      if (fish.mode === 'dart') fled++;
+    }
+    const expected = 1 - Math.exp(-WARY_TOUCH_RATE);
+    expect(fled / runs).toBeGreaterThan(expected - 0.1);
+    expect(fled / runs).toBeLessThan(expected + 0.1);
+  });
+
+  it('ignores a shark behind it', () => {
+    const [shark, fish] = approach(20);
+    Object.assign(fish, { heading: -1, flip: 1 });
+    expect(shyAway(fish, [shark, fish], bounds, always, DT, 1)).toBe(false);
+  });
+
+  it('ignores a shark out of sight ahead, or well above or below', () => {
+    const [shark, far] = approach(WARY_RADIUS_FRAC * bounds.width + 1);
+    expect(shyAway(far, [shark, far], bounds, always, DT, 1)).toBe(false);
+    const [shark2, below] = approach(20, 60, shark.height + 1);
+    expect(shyAway(below, [shark2, below], bounds, always, DT, 1)).toBe(false);
+  });
+
+  it('ignores a shark it is too big to be eaten by', () => {
+    const [shark, fish] = approach(20, 200 * PREY_MAX_RATIO + 1);
+    expect(shyAway(fish, [shark, fish], bounds, always, DT, 1)).toBe(false);
+  });
+
+  it('leaves hunters, a fish being chased, and a feeding, resting or hovered fish alone', () => {
+    const [shark, fish] = approach(20);
+    fish.hunter = true;
+    expect(shyAway(fish, [shark, fish], bounds, always, DT, 1)).toBe(false);
+    fish.hunter = undefined;
+    shark.quarry = 'fish';
+    expect(shyAway(fish, [shark, fish], bounds, always, DT, 1)).toBe(false);
+    shark.quarry = null;
+    for (const mode of ['feed', 'rest', 'ambush'] as const) {
+      fish.mode = mode;
+      expect(shyAway(fish, [shark, fish], bounds, always, DT, 1)).toBe(false);
+    }
+    fish.mode = 'cruise';
+    hold(fish, true, 1);
+    expect(shyAway(fish, [shark, fish], bounds, always, DT, 1)).toBe(false);
+  });
+
+  it('draws no random numbers with no shark ahead, so tanks without one keep their sequence', () => {
+    const [shark, fish] = approach(20);
+    Object.assign(fish, { heading: -1, flip: 1 });
+    const never = () => {
+      throw new Error('rng drawn');
+    };
+    expect(shyAway(fish, [shark, fish], bounds, never, DT, 1)).toBe(false);
+  });
+
+  it('turns a fish heading at a shark away most of the time, not every time', () => {
+    let turned = 0;
+    const runs = 100;
+    for (let seed = 1; seed <= runs; seed++) {
+      const r = rng(seed);
+      const [shark, fish] = approach(WARY_RADIUS_FRAC * bounds.width);
+      const fish2 = [shark, fish];
+      let now = 0;
+      // The shark holds still; stop once the fish turns or its nose reaches the shark.
+      while (fish.heading === 1 && fish.mode !== 'turn' && fish.x + fish.width / 2 < shark.x - shark.width / 2) {
+        step(fish2, bounds, DT, r, (now += DT));
+        Object.assign(shark, { x: 1200, y: 300, vx: 0, vy: 0 });
+        fish.y = 300;
+      }
+      if (fish.mode === 'turn' || fish.heading === -1) turned++;
+    }
+    expect(turned / runs).toBeGreaterThan(0.5);
+    expect(turned / runs).toBeLessThan(0.9);
   });
 });
 
