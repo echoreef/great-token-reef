@@ -86,6 +86,7 @@ Newest first.
 ### Wary fish, November 6, 2026
 
 By [@yglgary](https://github.com/yglgary).
+Pull request: <https://github.com/echoreef/great-token-reef/pull/7>
 
 In the fullscreen tank, a fish small enough for a shark or the killer whale to
 eat now tends to turn and dart off rather than swim straight at one. The closer
