@@ -4,7 +4,7 @@ import { DEPTHS, PARTY_SIZE, isLegendary, partyProblem, speciesName, type Depth,
 import { Fish } from '../../components/Fish';
 import { btnPrimary, chip } from '../../components/ui';
 import { api } from '../../lib/api';
-import { depthPreview, pickerOrder, toggleMember } from '../../lib/expeditionView';
+import { depthPreview, memberBlock, pickerOrder, toggleMember } from '../../lib/expeditionView';
 import { uiEvent } from '../../lib/telemetry';
 
 export function ExpeditionParty({ state }: { state: ReefExpeditions }) {
@@ -30,18 +30,23 @@ export function ExpeditionParty({ state }: { state: ReefExpeditions }) {
         Choose a party ({party.length} of {PARTY_SIZE}) · strength {strength}
       </h3>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-        {pickerOrder(state.fish).map((f) => (
-          <button
-            key={f.species}
-            type="button"
-            onClick={() => setParty((p) => toggleMember(p, f.species))}
-            className={`rounded-lg border p-2 text-left text-xs ${party.includes(f.species) ? 'border-cyan-600 bg-cyan-50 dark:bg-cyan-950' : 'border-zinc-200 dark:border-zinc-800'}`}
-          >
-            <Fish species={f.species} className="h-10 [&>svg]:h-full [&>svg]:w-full" />
-            <div className="truncate font-medium">{speciesName(f.species)}{isLegendary(f.species) ? ' ★' : ''}</div>
-            <div className="text-zinc-500">Lv {f.level} · strength {f.strength}</div>
-          </button>
-        ))}
+        {pickerOrder(state.fish).map((f) => {
+          const blocked = memberBlock(party, f.species);
+          return (
+            <button
+              key={f.species}
+              type="button"
+              disabled={blocked !== null}
+              title={blocked ?? undefined}
+              onClick={() => setParty((p) => toggleMember(p, f.species))}
+              className={`rounded-lg border p-2 text-left text-xs disabled:cursor-not-allowed disabled:opacity-40 ${party.includes(f.species) ? 'border-cyan-600 bg-cyan-50 dark:bg-cyan-950' : 'border-zinc-200 dark:border-zinc-800'}`}
+            >
+              <Fish species={f.species} className="h-10 [&>svg]:h-full [&>svg]:w-full" />
+              <div className="truncate font-medium">{speciesName(f.species)}{isLegendary(f.species) ? ' ★' : ''}</div>
+              <div className="text-zinc-500">Lv {f.level} · strength {f.strength}</div>
+            </button>
+          );
+        })}
       </div>
       <div className="flex flex-wrap gap-2">
         {DEPTHS.map((d) => {

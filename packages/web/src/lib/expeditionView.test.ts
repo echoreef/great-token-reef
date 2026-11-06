@@ -1,6 +1,6 @@
 import { LEGENDARY_ID_BASE, type ReefExpeditionFish } from '@gtr/shared';
 import { describe, expect, it } from 'vitest';
-import { depthPreview, pickerOrder, toggleMember } from './expeditionView';
+import { depthPreview, memberBlock, pickerOrder, toggleMember } from './expeditionView';
 
 const fish = (species: number, strength: number): ReefExpeditionFish => ({
   species, xp: 0, level: 1, trips: 0, strength, titles: [], chosenTitle: null, shownTitle: null,
@@ -12,6 +12,12 @@ describe('expedition view', () => {
     expect(toggleMember([1, 2, 3], 4)).toEqual([1, 2, 3]);
     expect(toggleMember([1, 2, 3], 2)).toEqual([1, 3]);
     expect(toggleMember([LEGENDARY_ID_BASE], LEGENDARY_ID_BASE + 1)).toEqual([LEGENDARY_ID_BASE]);
+  });
+  it('says why a fish cannot join', () => {
+    expect(memberBlock([1, 2], 3)).toBeNull();
+    expect(memberBlock([1, 2, 3], 3)).toBeNull();
+    expect(memberBlock([1, 2, 3], 4)).toBe('The party is full');
+    expect(memberBlock([LEGENDARY_ID_BASE], LEGENDARY_ID_BASE + 1)).toBe('A party can take only one legendary');
   });
   it('previews a depth for a party strength', () => {
     expect(depthPreview('reef', 30, 192_000_000)).toEqual({ depth: 'reef', label: 'Reef', recommended: 27, full: true, xp: 4, findPercent: 33, tokens: '192M' });
