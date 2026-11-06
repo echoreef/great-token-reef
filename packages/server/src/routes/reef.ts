@@ -7,6 +7,7 @@ import { z } from 'zod';
 import type { AppEnv } from '../app.ts';
 import { reefClaude } from './reefClaude.ts';
 import { reefCodex } from './reefCodex.ts';
+import { reefExpeditions } from './reefExpeditions.ts';
 import { refreshOfficialLimits } from '../services/reefLimits.ts';
 import { reefCatchesByDate, reefCollection } from '../services/reefCollection.ts';
 import { reefPending, releaseReef } from '../services/reefRelease.ts';
@@ -37,6 +38,7 @@ const agentParam = (raw: string | undefined) => {
 export const reef = new Hono<AppEnv>()
   .route('/claude', reefClaude)
   .route('/codex', reefCodex)
+  .route('/expeditions', reefExpeditions)
   .get('/summary', (c) => c.json(reefSummary(c.get('db'), agentParam(c.req.query('agent')))))
   .get('/trend', (c) => c.json(reefTrend(c.get('db'), daysParam(c.req.query('days'), 30), agentParam(c.req.query('agent')))))
   .get('/models', (c) => c.json(reefModels(c.get('db'), daysParam(c.req.query('days'), 30), agentParam(c.req.query('agent')))))
