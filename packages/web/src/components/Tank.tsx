@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSearch } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { LEGENDARY_ID_BASE, LEGENDARY_DEFS } from '@gtr/shared';
 import { api, type ReefPending } from '../lib/api';
 import { allSpecies } from '../lib/legendaryRows';
@@ -21,6 +21,7 @@ import { PrHud, QuotaHud } from './ReefWidget';
 import { TankArrange, useTankArrange } from './TankArrange';
 import { TankBackdrop, TankDecor } from './TankDecor';
 import { TankHoverCard } from './TankHoverCard';
+import { TankMinimap } from './TankMinimap';
 import { TankRelease } from './TankRelease';
 import { TankLines } from './TankLines';
 import { TankNoticeChip, useMinuteClock } from './TankNotices';
@@ -131,6 +132,12 @@ export function Tank({ onHeldRewards }: {
     [roster, specs, expeditions.data],
   );
   const trip = useTankExpedition(awayIds, expeditions.data !== undefined, reduced, bounds.width);
+  const navigate = useNavigate();
+  const planTrip = () => {
+    uiEvent('reef.tank.minimap.plan');
+    if (fullscreen) toggle();
+    void navigate({ to: '/', search: { tab: 'expeditions', plan: 1 }, replace: true });
+  };
   // Fish leaving the roster mid-release swim off-edge and stay rendered until gone; a fish a shark ate is away for a while.
   const school = useMemo(() => [
     ...roster.flatMap((r, i) => (hunt.eaten.has(specs[i]!.id) || trip.gone.has(specs[i]!.id) ? [] : [{ fish: r, spec: specs[i]!, leaving: false }])),
@@ -484,6 +491,9 @@ export function Tank({ onHeldRewards }: {
         >
           {notices.map((n) => <TankNoticeChip key={n.key} notice={n} />)}
         </div>
+      )}
+      {fullscreen && !arranging && expeditions.data && (
+        <TankMinimap state={expeditions.data} bottom={decor.floor + 8} onPlan={planTrip} />
       )}
       <button
         type="button"
