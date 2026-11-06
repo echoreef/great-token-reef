@@ -132,8 +132,8 @@ function seedExpeditions(db: Db, nowS: number): void {
   );
   const past = (depth: string, party: number[], strength: number, daysAgo: number, xp: number) =>
     Number(trip.run(depth, JSON.stringify(party), strength, nowS - daysAgo * 86400, nowS - daysAgo * 86400, xp).lastInsertRowid);
-  // Levels 5 to 15: a 105 experience, b 45, c 10, d 95, e 60.
-  const s1 = past('shallows', [a, b, c], 12, 9, 4);
+  // Levels 6 to 15: a 110 experience, b 50, c 15, d 95, e 60; the open trip's party is exactly at reef strength.
+  const s1 = past('shallows', [a, b, c], 12, 9, 9);
   const s2 = past('shallows', [a, b, c], 14, 8, 3);
   const s3 = past('shallows', [a, b, c], 15, 7, 3);
   const r1 = past('reef', [a, b, d], 30, 5, 35);
@@ -159,7 +159,7 @@ function seedExpeditions(db: Db, nowS: number): void {
     filled += r.t;
     start = r.ts;
   }
-  const strength = partyStrength([{ species: b, xp: 45 }, { species: c, xp: 10 }, { species: e, xp: 60 }], new Set());
+  const strength = partyStrength([{ species: b, xp: 50 }, { species: c, xp: 15 }, { species: e, xp: 60 }], new Set());
   db.prepare(
     'INSERT INTO expedition_trips (depth, party_json, strength, length_tokens, started_at) VALUES (?, ?, ?, ?, ?)',
   ).run('reef', JSON.stringify([b, c, e]), strength, length, start);
