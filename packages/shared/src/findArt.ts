@@ -468,6 +468,63 @@ export const FIND_ART: Record<string, FindBuilder> = {
   <circle cx="${cx}" cy="${cy}" r="7" fill="#e2c57f" stroke="#8a6a2a" stroke-width="2"/>
   <path d="M120 44 C130 30 146 24 162 24" fill="none" stroke="#fff" stroke-width="3" opacity="0.4" stroke-linecap="round"/>`;
   },
+  'abyss-whale-bone': (uid) => `<defs>${grad(uid, '#ece6d3', '#e0d8bf', '#f6f2e6')}</defs>
+  ${shadow}
+  <path d="M80 146 C80 92 126 56 182 56 C230 56 260 92 266 142 C267 148 258 151 256 144 C250 104 222 78 182 78 C134 78 106 108 106 146 Z" fill="url(#${uid}-b)"/>
+  <path d="M108 140 C110 106 138 80 182 80 C220 80 246 104 254 138" fill="none" stroke="#c9bf9f" stroke-width="3" opacity="0.6" stroke-linecap="round"/>
+  <path d="M90 112 C104 80 140 60 184 60 C222 60 248 86 258 118" fill="none" stroke="#fff" stroke-width="3" opacity="0.55" stroke-linecap="round"/>
+  <ellipse cx="92" cy="128" rx="34" ry="24" fill="url(#${uid}-b)"/>
+  <path d="M66 126 C70 116 82 110 94 110" fill="none" stroke="#fff" stroke-width="3" opacity="0.6" stroke-linecap="round"/>
+  <circle cx="150" cy="70" r="2.2" fill="#c9bf9f"/><circle cx="200" cy="68" r="1.8" fill="#c9bf9f"/><circle cx="232" cy="84" r="2" fill="#c9bf9f"/>
+  <g transform="translate(94 131) scale(1.3) translate(-94 -134)">
+  <ellipse cx="94" cy="134" rx="14" ry="11" fill="#2b251a"/>
+  <path d="M83 140 C84 130 104 130 105 140 Z" fill="#e0704f"/>
+  <path d="M89 133 L87 125 M99 133 L101 125" stroke="#e0704f" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="87" cy="124" r="2.4" fill="#1d1a12"/><circle cx="101" cy="124" r="2.4" fill="#1d1a12"/>
+  <circle cx="86.3" cy="123.3" r="0.8" fill="#fff"/><circle cx="100.3" cy="123.3" r="0.8" fill="#fff"/>
+  <path d="M84 139 C76 136 70 140 72 146 C76 149 82 146 84 142 Z" fill="#e0704f"/>
+  <path d="M72 146 L70 141" stroke="#2b251a" stroke-width="1.2" stroke-linecap="round"/>
+  </g>`,
+  'abyss-angler-lantern': (uid) => `<defs>${grad(uid, '#56626b', '#3f4a52', '#2c343a')}
+    <radialGradient id="${uid}-g" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff6b0" stop-opacity="0.9"/><stop offset="0.35" stop-color="#fff6b0" stop-opacity="0.32"/><stop offset="1" stop-color="#fff6b0" stop-opacity="0"/></radialGradient></defs>
+  ${shadow}
+  <circle cx="200" cy="68" r="62" fill="url(#${uid}-g)"/>
+  <path d="M112 134 C104 96 120 50 160 40 C184 34 200 44 200 56" fill="none" stroke="#3f4a52" stroke-width="8" stroke-linecap="round"/>
+  <path d="M107 128 C100 92 116 44 158 35 C178 31 194 38 200 48" fill="none" stroke="#8a97a0" stroke-width="2" opacity="0.7" stroke-linecap="round"/>
+  <path d="M84 150 C82 136 96 126 112 126 C128 126 140 136 138 150 L132 145 L125 151 L118 144 L111 151 L104 144 L97 151 L90 145 Z" fill="url(#${uid}-b)"/>
+  <path d="M88 136 C94 128 106 126 116 127" fill="none" stroke="#8a97a0" stroke-width="2" opacity="0.6" stroke-linecap="round"/>
+  <ellipse cx="200" cy="55" rx="7" ry="4" fill="#3f4a52"/>
+  <path d="M194 82 C192 90 194 96 190 102 M200 84 C201 92 199 98 201 106 M206 82 C209 88 207 94 211 99" fill="none" stroke="#f2e27a" stroke-width="1.5" opacity="0.6" stroke-linecap="round"/>
+  <circle cx="200" cy="70" r="15" fill="#f2e27a"/>
+  <circle cx="201" cy="72" r="8" fill="#fffbe0" opacity="0.9"/>
+  <circle cx="194" cy="64" r="3.5" fill="#fff" opacity="0.9"/>`,
+  'abyss-smoker-stone': (uid) => `<defs>${grad(uid, '#34363c', '#24262b', '#4a4d55')}</defs>
+  ${shadow}
+  <path d="M144 50 C138 42 150 36 144 28 C138 20 148 14 144 8" fill="none" stroke="#ffb36b" stroke-width="2.5" opacity="0.35" stroke-linecap="round"/>
+  <path d="M158 48 C152 38 164 32 158 22 C152 14 162 10 158 4" fill="none" stroke="#ffb36b" stroke-width="2.5" opacity="0.45" stroke-linecap="round"/>
+  <path d="M172 52 C166 44 178 38 172 30 C166 22 176 18 172 12" fill="none" stroke="#ffb36b" stroke-width="2.5" opacity="0.3" stroke-linecap="round"/>
+  <path d="M70 150 C66 132 74 116 88 108 L96 92 C104 82 118 80 128 84 L138 66 C146 56 160 54 170 60 L178 70 C190 66 204 70 210 80 L224 88 C238 94 246 110 248 126 C252 138 250 146 246 150 Z" fill="url(#${uid}-b)"/>
+  <path d="M128 84 L138 66 L150 70 L140 100 Z M210 80 L224 88 L214 110 L196 96 Z M74 140 L88 108 L104 124 L96 150 Z" fill="#17181b" opacity="0.45"/>
+  <path d="M178 70 L196 96 L182 124 L170 100 Z" fill="#4a4d55" opacity="0.35"/>
+  <path d="M88 108 L96 92 C104 82 118 80 128 84 L138 66 C146 56 160 54 170 60 L178 70 C190 66 204 70 210 80 L224 88 C238 94 246 110 248 126" fill="none" stroke="#7a7f8a" stroke-width="2" opacity="0.75" stroke-linejoin="round" stroke-linecap="round"/>
+  <ellipse cx="154" cy="59" rx="9" ry="3" fill="#ff7a3d" opacity="0.8"/>
+  <g fill="none" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M150 62 L146 80 L156 92 L148 110 L158 126 L152 148 M156 92 L172 98 L180 112 M96 118 L112 122 L120 136 L134 140 M196 90 L206 106 L222 112 L230 130" stroke="#ff7a3d" stroke-width="8" opacity="0.22"/>
+    <path d="M150 62 L146 80 L156 92 L148 110 L158 126 L152 148 M156 92 L172 98 L180 112 M96 118 L112 122 L120 136 L134 140 M196 90 L206 106 L222 112 L230 130" stroke="#ff7a3d" stroke-width="3"/>
+    <path d="M150 62 L146 80 L156 92 L148 110 L158 126 L152 148 M156 92 L172 98 L180 112 M96 118 L112 122 L120 136 L134 140 M196 90 L206 106 L222 112 L230 130" stroke="#ffb36b" stroke-width="1.2"/>
+  </g>`,
+  'abyss-squid-beak': (uid) => `<defs>${grad(uid, '#6e4a2c', '#5a3a22', '#8f6640')}</defs>
+  ${shadow}
+  <path d="M140 116 C160 112 200 112 238 110 C247 116 247 128 238 134 C210 146 170 150 152 142 C142 136 136 126 140 116 Z" fill="url(#${uid}-b)"/>
+  <path d="M140 116 C148 114 156 113 164 112 C160 122 160 134 166 145 C152 142 136 130 140 116 Z" fill="#2e1d10" opacity="0.65"/>
+  <path d="M144 115 C164 112 200 112 234 111" fill="none" stroke="#c49a6c" stroke-width="1.4" opacity="0.6" stroke-linecap="round"/>
+  <path d="M156 143 C180 148 212 142 236 132" fill="none" stroke="#c49a6c" stroke-width="1.8" opacity="0.5" stroke-linecap="round"/>
+  <path d="M244 86 C214 52 160 38 124 54 C98 66 86 102 96 142 C102 122 112 106 132 99 C164 90 206 94 240 100 C248 96 249 90 244 86 Z" fill="url(#${uid}-b)"/>
+  <path d="M124 54 C98 66 86 102 96 142 C102 122 112 106 132 99 C120 86 118 68 124 54 Z" fill="#2e1d10" opacity="0.7"/>
+  <path d="M132 99 C164 90 206 94 240 100" fill="none" stroke="#2e1d10" stroke-width="1.4" opacity="0.6"/>
+  <path d="M136 52 C166 42 204 50 232 72" fill="none" stroke="#c49a6c" stroke-width="3" opacity="0.85" stroke-linecap="round"/>
+  <path d="M112 64 C98 80 92 100 93 122" fill="none" stroke="#c49a6c" stroke-width="1.8" opacity="0.6" stroke-linecap="round"/>
+  <ellipse cx="166" cy="48" rx="6" ry="2.2" fill="#f1dcc0" opacity="0.85" transform="rotate(-2 166 48)"/>`,
 };
 
 /** SVG for a find (viewBox 0 0 320 180). `idPrefix` must be unique per rendered instance: gradient ids are global in HTML. */
