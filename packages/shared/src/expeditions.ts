@@ -1,6 +1,9 @@
 // Expedition rules. Pure like fish.ts: the server stores trips, everything else is derived here.
 
 import { z } from 'zod';
+import { setsContaining, speciesRarity, type Rarity, type SetLevel } from './fish.ts';
+import { isLegendary } from './legendaries.ts';
+
 
 export const DEPTHS = ['shallows', 'reef', 'dropoff', 'abyss'] as const;
 export const DepthValue = z.enum(DEPTHS);
@@ -55,4 +58,44 @@ export function levelForXp(xp: number): number {
   let level = 1;
   while (level < MAX_LEVEL && xp >= xpToReach(level + 1)) level++;
   return level;
+}
+
+export const RARITY_HEAD_START: Record<Rarity, number> = { common: 0, uncommon: 3, rare: 6, epic: 10, legendary: 15 };
+export const SET_BONUS: Record<SetLevel, number> = { water: 2, family: 4, species: 6 };
+
+/** Level, plus rarity head start, plus a bonus for each completed set the species belongs to. */
+export function fishStrength(species: number, xp: number, completedSets: ReadonlySet<string>): number {
+  let bonus = 0;
+  for (const set of setsContaining(species)) if (completedSets.has(set.id)) bonus += SET_BONUS[set.level];
+  return levelForXp(xp) + RARITY_HEAD_START[speciesRarity(species)] + bonus;
+}
+
+export function partyStrength(party: readonly { species: number; xp: number }[], completedSets: ReadonlySet<string>): number {
+  return party.reduce((sum, f) => sum + fishStrength(f.species, f.xp, completedSets), 0);
+}
+
+export interface TripPayout {
+  xp: number;
+  /** at or above the recommended strength */
+  full: boolean;
+  findChance: number;
+}
+
+export function tripPayout(depth: Depth, strength: number): TripPayout {
+  const rule = DEPTH_RULES[depth];
+  if (strength < rule.recommended) {
+    return { xp: Math.floor((rule.xp * strength) / rule.recommended), full: false, findChance: 0 };
+  }
+  const chance = rule.findBase + (strength - rule.recommended) * FIND_CHANCE_PER_POINT;
+  return { xp: rule.xp, full: true, findChance: Math.min(FIND_CHANCE_MAX, chance) };
+}
+
+export type PartyProblem = 'size' | 'duplicate' | 'not-released' | 'legendaries';
+
+export function partyProblem(party: readonly number[], released: ReadonlySet<number>): PartyProblem | null {
+  if (party.length !== PARTY_SIZE) return 'size';
+  if (new Set(party).size !== party.length) return 'duplicate';
+  if (party.some((s) => !released.has(s))) return 'not-released';
+  if (party.filter(isLegendary).length > 1) return 'legendaries';
+  return null;
 }
