@@ -14,7 +14,7 @@ import { anchorsFor, bubblesFor, decorFor, planktonFor, populationFor, specFor }
 import { uiEvent } from '../lib/telemetry';
 import { tankNotices } from '../lib/tankNotices';
 import { emptyTankMessage } from '../lib/tankLines';
-import { awaySpecies, awaySwimmerIds } from '../lib/tankExpedition';
+import { awaySpecies, awaySwimmerIds, hoverLine } from '../lib/tankExpedition';
 import type { SwimmerSpec } from '../lib/tankSim';
 import { Fish } from './Fish';
 import { PrHud, QuotaHud } from './ReefWidget';
@@ -421,7 +421,10 @@ export function Tank({ onHeldRewards }: {
         </div>
       )}
       {!plaque && !arranging && hoveredFish && hoveredSwimmer && (
-        <TankHoverCard fish={hoveredFish} swimmer={hoveredSwimmer} bounds={bounds} />
+        <TankHoverCard
+          fish={hoveredFish} swimmer={hoveredSwimmer} bounds={bounds}
+          expedition={hoverLine(expeditions.data?.fish.find((f) => f.species === hoveredFish.species))}
+        />
       )}
       {plaqueFish && plaqueText && (
         <TankPlaque
