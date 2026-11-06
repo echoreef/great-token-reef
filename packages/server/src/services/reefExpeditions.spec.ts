@@ -1,7 +1,7 @@
 import { DEFAULT_TYPICAL_DAY, LEGENDARY_ID_BASE, SPECIES_COUNT, findsAt, speciesRarity, type Rarity } from '@gtr/shared';
 import { describe, expect, it } from 'vitest';
 import { fixtureDb } from './fixtures.ts';
-import { activeDayTotals, expeditionState, startExpedition, welcomeHome } from './reefExpeditions.ts';
+import { activeDayTotals, chooseTitle, expeditionState, startExpedition, welcomeHome } from './reefExpeditions.ts';
 import { setSetting } from './settings.ts';
 
 const NOW = Math.floor(Date.now() / 1000);
@@ -126,5 +126,19 @@ describe('welcoming a party home', () => {
     addUsage(db, NOW + 10, DEFAULT_TYPICAL_DAY);
     const r = welcomeHome(db, NOW + 20, always);
     expect(r.ok && { xp: r.value.xp, find: r.value.find }).toEqual({ xp: Math.floor((4 * 19) / 27), find: null });
+  });
+});
+
+describe('choosing a title', () => {
+  it('shows a chosen title the fish holds and refuses one it does not', () => {
+    const db = tank();
+    startExpedition(db, { depth: 'shallows', party: [COMMON, RARE, EPIC] }, NOW);
+    addUsage(db, NOW + 10, DEFAULT_TYPICAL_DAY);
+    welcomeHome(db, NOW + 20, always);
+    expect(chooseTitle(db, RARE, 'leviathan', NOW)).toEqual({ ok: false, status: 400, error: 'that fish has not earned that title' });
+    const r = chooseTitle(db, RARE, 'treasure-hunter', NOW);
+    expect(r.ok && r.value.fish.find((f) => f.species === RARE)?.chosenTitle).toBe('treasure-hunter');
+    const cleared = chooseTitle(db, RARE, null, NOW);
+    expect(cleared.ok && cleared.value.fish.find((f) => f.species === RARE)?.chosenTitle).toBeNull();
   });
 });

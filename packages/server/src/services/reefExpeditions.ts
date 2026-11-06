@@ -183,3 +183,14 @@ export function welcomeHome(db: Db, now: number, rngFor = (tripId: number) => se
     value: { tripId: open.id, depth: open.depth, party, xp: payout.xp, find: find?.id ?? null, titles: awarded, state: expeditionState(db, now) },
   };
 }
+
+export function chooseTitle(db: Db, species: number, title: string | null, now: number): ExpeditionResult<ReefExpeditions> {
+  if (title !== null && !(isTitleId(title) && earnedTitles(db).get(species)?.includes(title))) {
+    return { ok: false, status: 400, error: 'that fish has not earned that title' };
+  }
+  db.prepare(
+    `INSERT INTO expedition_fish (species, chosen_title) VALUES (?, ?)
+     ON CONFLICT(species) DO UPDATE SET chosen_title = excluded.chosen_title`,
+  ).run(species, title);
+  return { ok: true, value: expeditionState(db, now) };
+}
