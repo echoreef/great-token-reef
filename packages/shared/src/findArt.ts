@@ -217,6 +217,68 @@ export const FIND_ART: Record<string, FindBuilder> = {
   </g>
   <path d="M196 156 C204 140 228 136 246 144 C258 148 264 154 262 158 Z" fill="#d8c39a"/>
   <path d="M208 148 C220 144 236 145 248 150" fill="none" stroke="#efe0bd" stroke-width="2" stroke-linecap="round" opacity="0.7"/>`,
+  'reef-trident-tine': (uid) => `<defs>${grad(uid, '#e2c46e', '#d4b257', '#f2e2a8')}</defs>
+  ${shadow}
+  <g transform="translate(0 6)">
+    <path d="M84 127 L172 119.7 L220.5 59.6 L231.5 68.4 L179.7 132.7 L84 141 L80 138 L85 135 L79 132 L84 129.5 Z" fill="url(#${uid}-b)"/>
+    <path d="M84 141 L179.7 132.7 L231.5 68.4 L227.5 65.2 L176.5 128 L84 136 Z" fill="#b8963e" opacity="0.55"/>
+    <path d="M84 126 L76 129.5 L82 132.5 L75 136 L81 139 L84 142 L91 138.5 L87 134 L91 129.5 Z" fill="#9b7c2e"/>
+    <g transform="translate(226 64) rotate(-51.1)">
+      <path d="M-4 -7 L-14 -17 L-1 -15 L32 0 L-1 15 L-14 17 L-4 7 Z" fill="url(#${uid}-b)"/>
+      <path d="M-1 -12 L28 -1" stroke="#fff" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    </g>
+    <path d="M172 119.7 L179.7 132.7" stroke="#b8963e" stroke-width="2" opacity="0.8"/>
+    <path d="M92 130 L170 123.5 L214 69" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.5"/>
+  </g>`,
+  'reef-camera': (uid) => `<defs>${grad(uid, '#f6cf45', '#f2c230', '#fbe58f')}</defs>
+  ${shadow}
+  <path d="M98 124 C72 124 62 144 78 150 C92 154 104 144 100 130" fill="none" stroke="#2b2f33" stroke-width="4" stroke-linecap="round"/>
+  <rect x="108" y="54" width="24" height="12" rx="4" fill="#2b2f33"/>
+  <rect x="112" y="52" width="16" height="4" rx="2" fill="#535a62"/>
+  <rect x="92" y="64" width="138" height="78" rx="18" fill="url(#${uid}-b)"/>
+  <path d="M94 86 L228 86" stroke="#d9a920" stroke-width="2.5"/>
+  <rect x="94" y="96" width="8" height="24" rx="3" fill="#d9a920"/>
+  <rect x="196" y="70" width="22" height="12" rx="3" fill="#1f2a33"/>
+  <rect x="199" y="72" width="7" height="4" rx="1.5" fill="#7fb3e0" opacity="0.6"/>
+  <circle cx="164" cy="108" r="33" fill="#d9a920"/>
+  <circle cx="164" cy="108" r="27" fill="#1f2a33"/>
+  <circle cx="164" cy="108" r="18" fill="none" stroke="#33434f" stroke-width="3"/>
+  <circle cx="164" cy="108" r="8" fill="#2c3a46"/>
+  <ellipse cx="154" cy="97" rx="8" ry="5" fill="#7fb3e0" transform="rotate(-35 154 97)" opacity="0.9"/>
+  <circle cx="174" cy="119" r="2.5" fill="#7fb3e0" opacity="0.7"/>
+  <path d="M104 74 C112 68 124 67 134 68" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.55"/>`,
+  'reef-toy-anchor': (uid) => `<defs>${grad(uid, '#d4574c', '#c9473d', '#e8857c')}</defs>
+  ${shadow}
+  <circle cx="160" cy="36" r="12" fill="none" stroke="url(#${uid}-b)" stroke-width="7"/>
+  <rect x="152" y="46" width="16" height="96" rx="4" fill="url(#${uid}-b)"/>
+  <path d="M104 100 C108 130 132 144 160 144 C188 144 212 130 216 100" fill="none" stroke="url(#${uid}-b)" stroke-width="13" stroke-linecap="round"/>
+  <path d="M92 110 L102 82 L118 104 Z M228 110 L218 82 L202 104 Z" fill="url(#${uid}-b)"/>
+  <rect x="120" y="58" width="80" height="11" rx="5.5" fill="url(#${uid}-b)"/>
+  <circle cx="120" cy="63.5" r="7" fill="#c9473d"/><circle cx="200" cy="63.5" r="7" fill="#c9473d"/>
+  <circle cx="160" cy="142" r="9" fill="#c9473d"/>
+  <path d="M155 88 L163 84 L167 93 L161 101 L154 97 Z" fill="#c49a6c"/>
+  <path d="M157 89 L158 98 M162 87 L164 97" stroke="#a87d50" stroke-width="1.2"/>
+  <path d="M190 132 L200 126 L205 134 L196 140 Z" fill="#c49a6c"/>
+  <path d="M134 60 L142 59 L144 66 L135 68 Z" fill="#c49a6c"/>
+  <path d="M206 92 L212 88 L214 96 Z" fill="#c49a6c"/>
+  <path d="M110 120 L117 117 L119 124 L112 127 Z" fill="#c49a6c"/>
+  <path d="M156 50 L156 82 M156 104 L156 132" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+  <path d="M110 108 C116 126 130 134 146 137" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/>`,
+  'reef-brass-key': (uid) => `<defs>${grad(uid, '#d6ad4e', '#c49a3a', '#ebcf86')}</defs>
+  ${shadow}
+  <g transform="translate(160 86) rotate(28) scale(1.15)">
+    <circle cx="-56" cy="-21" r="7" fill="none" stroke="url(#${uid}-b)" stroke-width="5"/>
+    <circle cx="-56" cy="21" r="7" fill="none" stroke="url(#${uid}-b)" stroke-width="5"/>
+    <circle cx="-77" cy="0" r="7" fill="none" stroke="url(#${uid}-b)" stroke-width="5"/>
+    <circle cx="-56" cy="0" r="15" fill="none" stroke="url(#${uid}-b)" stroke-width="8"/>
+    <rect x="-40" y="-4.5" width="114" height="9" rx="4" fill="url(#${uid}-b)"/>
+    <rect x="-40" y="-8" width="7" height="16" rx="2" fill="#c49a3a"/>
+    <rect x="-29" y="-7" width="5" height="14" rx="2" fill="#c49a3a"/>
+    <path d="M44 4 L44 26 L50 26 L50 18 L56 18 L56 28 L63 28 L63 19 L70 19 L70 4 Z" fill="url(#${uid}-b)"/>
+    <path d="M-22 -2 L68 -2" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.45"/>
+    <path d="M-66 -8 C-62 -13 -56 -14 -50 -12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    <g fill="#5f9e83" opacity="0.85"><ellipse cx="-44" cy="8" rx="3.5" ry="2.5"/><ellipse cx="8" cy="1.5" rx="5" ry="2.5"/><ellipse cx="22" cy="-1" rx="2.5" ry="2"/><ellipse cx="58" cy="22" rx="3" ry="2.5"/><ellipse cx="-80" cy="-4" rx="2.5" ry="2"/></g>
+  </g>`,
 };
 
 /** SVG for a find (viewBox 0 0 320 180). `idPrefix` must be unique per rendered instance: gradient ids are global in HTML. */
