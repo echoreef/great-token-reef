@@ -84,7 +84,39 @@ describe('starting a trip', () => {
   });
 });
 
+describe('trip progress', () => {
+  it('counts every token kind fish count, from the start, and Codex only from its reward start', () => {
+    const db = tank();
+    setSetting(db, 'codexRewardEpoch', String(NOW + 100));
+    startExpedition(db, { depth: 'shallows', party: [COMMON, RARE, EPIC] }, NOW);
+    const add = db.prepare(
+      `INSERT INTO cc_usage (request_id, ts, session_id, project, model, agent,
+         input_tokens, output_tokens, cache_read_tokens, cache_w5m_tokens, cache_w1h_tokens)
+       VALUES (?, ?, 's', '/p', 'm', ?, 1, 2, 3, 4, 5)`,
+    );
+    add.run('before-start', NOW - 10, 'claude');
+    add.run('claude', NOW + 10, 'claude');
+    add.run('codex-early', NOW + 50, 'codex');
+    add.run('codex-late', NOW + 200, 'codex');
+    expect(expeditionState(db, NOW + 300).trip?.progressTokens).toBe(30);
+  });
+});
+
 describe('welcoming a party home', () => {
+  it('leaves the trip open and unpaid when the welcome fails part-way', () => {
+    const db = tank();
+    startExpedition(db, { depth: 'shallows', party: [COMMON, RARE, EPIC] }, NOW);
+    addUsage(db, NOW + 10, DEFAULT_TYPICAL_DAY);
+    db.exec(`CREATE TRIGGER boom BEFORE INSERT ON expedition_titles BEGIN SELECT RAISE(ABORT, 'boom'); END`);
+    expect(() => welcomeHome(db, NOW + 20, always)).toThrow('boom');
+    const s = expeditionState(db, NOW + 20);
+    expect(s.trip).toMatchObject({ returned: true });
+    expect(s.finds).toEqual([]);
+    expect(s.fish.every((f) => f.xp === 0)).toBe(true);
+    db.exec('DROP TRIGGER boom');
+    expect(welcomeHome(db, NOW + 30, always).ok).toBe(true);
+  });
+
   it('waits until the trip is full', () => {
     const db = tank();
     startExpedition(db, { depth: 'shallows', party: [COMMON, RARE, EPIC] }, NOW);
