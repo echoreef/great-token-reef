@@ -379,6 +379,95 @@ export const FIND_ART: Record<string, FindBuilder> = {
   <circle cx="186" cy="118" r="3" fill="#fff" opacity="0.5"/>
   <path d="M112 62 C120 46 140 36 160 35" fill="none" stroke="#fff" stroke-width="3" opacity="0.35" stroke-linecap="round"/>`;
   },
+  'dropoff-cargo-crate': (uid) => {
+    const barnacle = (x: number, y: number, s: number) =>
+      `<path d="M${x - s} ${y} L${(x - s * 0.45).toFixed(1)} ${(y - s * 1.2).toFixed(1)} L${(x + s * 0.45).toFixed(1)} ${(y - s * 1.2).toFixed(1)} L${x + s} ${y} Z" fill="#eeeae0"/>
+      <ellipse cx="${x}" cy="${(y - s * 1.2).toFixed(1)}" rx="${(s * 0.42).toFixed(1)}" ry="${(s * 0.18).toFixed(1)}" fill="#8f897d"/>`;
+    const cluster = [[94, 140, 5], [104, 142, 4], [99, 132, 3.5], [112, 143, 3], [226, 108, 4.5], [233, 102, 3.5], [228, 119, 3], [150, 60, 4], [160, 58, 3], [143, 55, 3]]
+      .map(([x, y, s]) => barnacle(x!, y!, s!)).join('');
+    return `<defs>${grad(uid, '#a57c4e', '#9c7448', '#c49a6c')}</defs>
+  ${shadow}
+  <path d="M84 64 L192 74 L240 54 L132 46 Z" fill="#c49a6c"/>
+  <path d="M100 63 L206 72 M114 57 L220 66 M126 52 L232 60" stroke="#9c7448" stroke-width="1.5" opacity="0.7"/>
+  <path d="M192 74 L240 54 L240 128 L192 150 Z" fill="#7f5c37"/>
+  <path d="M192 99 L240 79 M192 124 L240 104" stroke="#5f4428" stroke-width="1.5" opacity="0.8"/>
+  <path d="M192 74 L240 54 L240 63 L192 83 Z M192 141 L240 119 L240 128 L192 150 Z" fill="#6c4e2f"/>
+  <path d="M84 64 L192 74 L192 150 L84 140 Z" fill="url(#${uid}-b)"/>
+  <path d="M84 89 L192 99 M84 115 L192 125" stroke="#7d5a34" stroke-width="1.5" opacity="0.8"/>
+  <path d="M84 64 L192 74 L192 83 L84 73 Z M84 131 L192 141 L192 150 L84 140 Z" fill="#8a6440"/>
+  <path d="M84 64 L94 65 L94 141 L84 140 Z M182 73 L192 74 L192 150 L182 149 Z" fill="#8a6440"/>
+  <path d="M84 64 L104 66 L104 73 L91 72 L91 84 L84 84 Z" fill="#5d5a52"/>
+  <path d="M192 74 L172 72 L172 79 L185 80 L185 92 L192 92 Z" fill="#5d5a52"/>
+  <path d="M84 140 L104 142 L104 135 L91 134 L91 122 L84 122 Z" fill="#5d5a52"/>
+  <path d="M192 150 L172 148 L172 141 L185 142 L185 130 L192 130 Z" fill="#5d5a52"/>
+  <circle cx="88" cy="69" r="1.6" fill="#c9c3b5"/><circle cx="188" cy="78" r="1.6" fill="#c9c3b5"/>
+  <circle cx="88" cy="136" r="1.6" fill="#c9c3b5"/><circle cx="188" cy="146" r="1.6" fill="#c9c3b5"/>
+  <text x="138" y="114" transform="rotate(5.3 138 110)" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="16" letter-spacing="1" fill="#7a2e22" opacity="0.85">FRAGILE</text>
+  <path d="M98 70 L176 77" stroke="#fff" stroke-width="2" opacity="0.25" stroke-linecap="round"/>
+  ${cluster}`;
+  },
+  'dropoff-last-bottle': (uid) => `<defs>${grad(uid, '#6b4226', '#4e2f1a', '#8a5a36')}</defs>
+  ${shadow}
+  <path d="M168 44 C186 52 204 66 210 82" fill="none" stroke="#d9cfb4" stroke-width="1.5"/>
+  <path d="M204 80 L222 78 L226 102 L208 104 Z" fill="#efe6cc"/>
+  <circle cx="211" cy="84" r="2" fill="#4e2f1a"/>
+  <path d="M211 92 L221 91 M212 97 L219 96" stroke="#5a4630" stroke-width="1.2" opacity="0.7"/>
+  <path d="M148 28 L172 28 L172 54 C172 64 198 68 198 88 L198 142 C198 148 192 150 186 150 L134 150 C128 150 122 148 122 142 L122 88 C122 68 148 64 148 54 Z" fill="url(#${uid}-b)"/>
+  <ellipse cx="160" cy="147" rx="36" ry="3" fill="#2e1b0e" opacity="0.5"/>
+  <path d="M124 96 C148 100 172 100 196 96 L196 132 C172 136 148 136 124 132 Z" fill="#efe6cc"/>
+  <path d="M124 100 C148 104 172 104 196 100" fill="none" stroke="#b3322b" stroke-width="2" opacity="0.7"/>
+  <path d="M136 112 L184 112 M140 120 L180 120" stroke="#5a4630" stroke-width="2" opacity="0.55" stroke-linecap="round"/>
+  <path d="M145 36 C144 24 152 18 160 18 C168 18 176 24 175 36 C177 44 174 50 172 48 C171 44 169 42 168 46 C166 52 163 52 162 46 C160 42 156 44 154 48 C152 52 148 48 149 42 C147 44 144 42 145 36 Z" fill="#b3322b"/>
+  <path d="M152 26 C155 22 160 21 164 22" fill="none" stroke="#fff" stroke-width="2.5" opacity="0.4" stroke-linecap="round"/>
+  <path d="M132 84 C132 76 140 70 148 66" fill="none" stroke="#fff" stroke-width="3" opacity="0.3" stroke-linecap="round"/>
+  <path d="M131 138 L131 136" stroke="#fff" stroke-width="5" opacity="0.25" stroke-linecap="round"/>
+  <path d="M190 90 L190 140" stroke="#fff" stroke-width="2" opacity="0.15" stroke-linecap="round"/>`,
+  'dropoff-sea-chart': (uid) => `<defs>${grad(uid, '#ecdfb3', '#e8d9a8', '#f5ecd0')}
+    <linearGradient id="${uid}-g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b9a56f"/><stop offset="0.45" stop-color="#f5ecd0"/><stop offset="1" stop-color="#c2ae78"/></linearGradient></defs>
+  ${shadow}
+  <path d="M76 48 C120 40 200 56 244 46 L244 140 C200 150 120 134 76 144 Z" fill="url(#${uid}-b)"/>
+  <path d="M110 48 L108 140 M160 48 L160 142 M210 50 L212 144 M76 95 C120 88 200 102 244 93" stroke="#5a4630" stroke-width="0.8" opacity="0.18" fill="none"/>
+  <path d="M78 52 C100 54 110 66 104 80 C98 94 116 102 130 98 C142 94 148 80 140 66 C136 58 150 50 170 52" fill="none" stroke="#5a4630" stroke-width="2.5" stroke-dasharray="0.1 5" stroke-linecap="round"/>
+  <path d="M78 52 C100 54 110 66 104 80 C98 94 116 102 130 98 C142 94 148 80 140 66 C136 58 150 50 170 52 C130 46 100 48 78 52 Z" fill="#5a4630" opacity="0.08"/>
+  <path d="M134 112 C150 116 168 118 190 110" fill="none" stroke="#5a4630" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.6"/>
+  <text x="120" y="128" font-family="sans-serif" font-size="11" fill="#5a4630">12</text>
+  <text x="200" y="76" font-family="sans-serif" font-size="11" fill="#5a4630">40</text>
+  <path d="M190 102 L206 118 M206 102 L190 118" stroke="#c8463c" stroke-width="4.5" stroke-linecap="round"/>
+  <rect x="62" y="42" width="20" height="108" rx="10" fill="url(#${uid}-g)"/>
+  <ellipse cx="72" cy="46" rx="10" ry="4" fill="#d8c690"/><ellipse cx="72" cy="46" rx="4" ry="1.8" fill="#b09a60"/>
+  <rect x="238" y="40" width="20" height="108" rx="10" fill="url(#${uid}-g)"/>
+  <ellipse cx="248" cy="44" rx="10" ry="4" fill="#d8c690"/><ellipse cx="248" cy="44" rx="4" ry="1.8" fill="#b09a60"/>`,
+  'dropoff-telegraph': (uid) => {
+    const cx = 160, cy = 72, R = 44;
+    const pt = (deg: number, r: number) => {
+      const a = (deg * Math.PI) / 180;
+      return `${(cx + r * Math.cos(a)).toFixed(1)} ${(cy + r * Math.sin(a)).toFixed(1)}`;
+    };
+    const step = 180 / 7;
+    const sector = (k: number, fill: string, op: number) =>
+      `<path d="M${pt(-180 + k * step, 14)} L${pt(-180 + k * step, R)} A${R} ${R} 0 0 1 ${pt(-180 + (k + 1) * step, R)} L${pt(-180 + (k + 1) * step, 14)} A14 14 0 0 0 ${pt(-180 + k * step, 14)} Z" fill="${fill}" opacity="${op}"/>`;
+    let lines = '';
+    for (let k = 0; k <= 7; k++) lines += `<path d="M${pt(-180 + k * step, 14)} L${pt(-180 + k * step, R)}" stroke="#2b2f33" stroke-width="2"/>`;
+    const lever = -180 + 6.5 * step;
+    return `<defs>${grad(uid, '#c9a14a', '#b38c3a', '#e2c57f')}</defs>
+  ${shadow}
+  <ellipse cx="160" cy="146" rx="40" ry="7" fill="#8a6a2a"/>
+  <rect x="120" y="138" width="80" height="8" rx="3" fill="#a07c30"/>
+  <path d="M146 112 L174 112 L178 140 L142 140 Z" fill="url(#${uid}-b)"/>
+  <path d="M150 116 L152 136" stroke="#fff" stroke-width="2.5" opacity="0.3" stroke-linecap="round"/>
+  <circle cx="${cx}" cy="${cy}" r="56" fill="url(#${uid}-b)"/>
+  <circle cx="${cx}" cy="${cy}" r="${R + 3}" fill="#8a6a2a"/>
+  <circle cx="${cx}" cy="${cy}" r="${R}" fill="#f4f1e6"/>
+  ${sector(0, '#2b2f33', 0.18)}${sector(3, '#2b2f33', 0.12)}${sector(6, '#c8463c', 0.75)}
+  ${lines}
+  <path d="M${pt(-180, R)} L${pt(0, R)}" stroke="#2b2f33" stroke-width="2"/>
+  <rect x="146" y="88" width="28" height="10" rx="2" fill="#e2c57f" stroke="#8a6a2a" stroke-width="1"/>
+  <path d="M${pt(lever, 0)} L${pt(lever, 70)}" stroke="#8a6a2a" stroke-width="7" stroke-linecap="round"/>
+  <path d="M${pt(lever, 0)} L${pt(lever, 70)}" stroke="#e2c57f" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="${pt(lever, 72).split(' ')[0]}" cy="${pt(lever, 72).split(' ')[1]}" r="7" fill="#2b2f33"/>
+  <circle cx="${cx}" cy="${cy}" r="7" fill="#e2c57f" stroke="#8a6a2a" stroke-width="2"/>
+  <path d="M120 44 C130 30 146 24 162 24" fill="none" stroke="#fff" stroke-width="3" opacity="0.4" stroke-linecap="round"/>`;
+  },
 };
 
 /** SVG for a find (viewBox 0 0 320 180). `idPrefix` must be unique per rendered instance: gradient ids are global in HTML. */
