@@ -279,6 +279,106 @@ export const FIND_ART: Record<string, FindBuilder> = {
     <path d="M-66 -8 C-62 -13 -56 -14 -50 -12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
     <g fill="#5f9e83" opacity="0.85"><ellipse cx="-44" cy="8" rx="3.5" ry="2.5"/><ellipse cx="8" cy="1.5" rx="5" ry="2.5"/><ellipse cx="22" cy="-1" rx="2.5" ry="2"/><ellipse cx="58" cy="22" rx="3" ry="2.5"/><ellipse cx="-80" cy="-4" rx="2.5" ry="2"/></g>
   </g>`,
+  'dropoff-ship-bell': (uid) => `<defs>${grad(uid, '#9aa868', '#8a9a5b', '#c3cf95')}</defs>
+  ${shadow}
+  <rect x="104" y="14" width="112" height="11" rx="5" fill="#6d7a45"/>
+  <rect x="108" y="15" width="104" height="3" rx="1.5" fill="#c3cf95" opacity="0.45"/>
+  <path d="M146 25 L174 25 L170 40 L150 40 Z" fill="#7a8850"/>
+  <circle cx="114" cy="19.5" r="2.5" fill="#4d5833"/><circle cx="206" cy="19.5" r="2.5" fill="#4d5833"/>
+  <path d="M128 50 C128 34 192 34 192 50 C194 82 200 106 222 120 C232 126 232 136 222 136 L98 136 C88 136 88 126 98 120 C120 106 126 82 128 50 Z" fill="url(#${uid}-b)"/>
+  <path d="M127 60 C148 64 172 64 193 60" fill="none" stroke="#6d7a45" stroke-width="4" opacity="0.7"/>
+  <path d="M110 114 C140 121 180 121 210 114" fill="none" stroke="#6d7a45" stroke-width="4" opacity="0.7"/>
+  <ellipse cx="146" cy="88" rx="9" ry="6" fill="#b9d3a8" opacity="0.55"/>
+  <ellipse cx="182" cy="76" rx="6" ry="4" fill="#b9d3a8" opacity="0.5"/>
+  <ellipse cx="190" cy="102" rx="11" ry="5" fill="#6f9e86" opacity="0.5"/>
+  <ellipse cx="124" cy="126" rx="8" ry="3.5" fill="#6f9e86" opacity="0.55"/>
+  <ellipse cx="160" cy="133" rx="60" ry="7" fill="#4d5833"/>
+  <path d="M160 128 L160 140" stroke="#3a4226" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="160" cy="144" r="8" fill="#5f6b3c"/><circle cx="157" cy="141" r="2.5" fill="#c3cf95" opacity="0.6"/>
+  <path d="M138 46 C134 70 132 96 118 116" fill="none" stroke="#fff" stroke-width="4" opacity="0.35" stroke-linecap="round"/>`,
+  'dropoff-anchor-chain': (uid) => {
+    const n = 9, pitch = 22, x0 = 160 - (pitch * (n - 1)) / 2;
+    const yAt = (x: number) => 128 - 12 * Math.sin((x - x0) / 46);
+    const spots: [number, number][] = [[-12, -6], [12, 5], [-4, 9]];
+    let edge = '', face = '';
+    for (let i = 0; i < n; i++) {
+      const x = x0 + i * pitch, y = yAt(x);
+      const ang = (Math.atan2(yAt(x + 1) - yAt(x - 1), 2) * 180) / Math.PI;
+      const rot = `transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${ang.toFixed(1)})"`;
+      if (i % 2 === 1) {
+        edge += `<g ${rot}><rect x="-21" y="-6" width="42" height="12" rx="6" fill="url(#${uid}-b)"/>
+          <path d="M-15 -2.5 L15 -2.5" stroke="#b0704a" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+          <circle cx="${i % 4 === 1 ? -8 : 9}" cy="2" r="2.8" fill="#5e2f19"/></g>`;
+      } else if (i === n - 1) {
+        face += `<g ${rot}><path d="M14 -12 C6 -18 -16 -16 -20 -4 C-23 8 -10 16 4 15 C12 14 18 12 22 10" fill="none" stroke="#8b4a2b" stroke-width="9" stroke-linecap="round"/>
+          <path d="M-17 -7 C-12 -14 2 -15 9 -13" fill="none" stroke="#b0704a" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="-19" cy="3" r="3" fill="#5e2f19"/><circle cx="4" cy="14" r="2.4" fill="#5e2f19"/>
+          <circle cx="14" cy="-12" r="4.2" fill="#5e2f19"/><circle cx="22" cy="10" r="4.2" fill="#5e2f19"/></g>`;
+      } else {
+        const [sx, sy] = spots[(i / 2) % 3]!;
+        face += `<g ${rot}><ellipse cx="0" cy="0" rx="19" ry="13" fill="none" stroke="#8b4a2b" stroke-width="9"/>
+          <path d="M-15 -8 C-9 -14 8 -14 14 -9" fill="none" stroke="#b0704a" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="${sx * 1.3}" cy="${sy * 1.4}" r="3" fill="#5e2f19"/><circle cx="${-sx + 4}" cy="${sy > 0 ? -12 : 12}" r="2.2" fill="#5e2f19"/></g>`;
+      }
+    }
+    return `<defs>${grad(uid, '#b0704a', '#8b4a2b', '#6e3920')}</defs>
+  ${shadow}
+  ${edge}${face}`;
+  },
+  'dropoff-porthole': (uid) => {
+    let bolts = '';
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      const x = (160 + 55 * Math.cos(a)).toFixed(1), y = (86 + 55 * Math.sin(a)).toFixed(1);
+      bolts += `<circle cx="${x}" cy="${y}" r="4.2" fill="#8a6a2a"/><circle cx="${x}" cy="${y}" r="2.8" fill="#e2c57f"/>`;
+    }
+    return `<defs>${grad(uid, '#c9a14a', '#b38c3a', '#e2c57f')}
+    <clipPath id="${uid}-g"><circle cx="160" cy="86" r="44"/></clipPath></defs>
+  ${shadow}
+  <rect x="88" y="78" width="14" height="18" rx="3" fill="#8a6a2a"/>
+  <rect x="218" y="80" width="14" height="14" rx="3" fill="#8a6a2a"/>
+  <circle cx="160" cy="86" r="64" fill="url(#${uid}-b)"/>
+  <circle cx="160" cy="86" r="64" fill="none" stroke="#8a6a2a" stroke-width="2" opacity="0.6"/>
+  ${bolts}
+  <circle cx="160" cy="86" r="47" fill="#8a6a2a"/>
+  <circle cx="160" cy="86" r="44" fill="#1f3f55"/>
+  <g clip-path="url(#${uid}-g)">
+    <ellipse cx="160" cy="132" rx="60" ry="26" fill="#173244"/>
+    <path d="M128 92 C142 76 178 76 192 92 C178 106 142 106 128 92 Z" fill="#e8f4f8" opacity="0.13"/>
+    <circle cx="160" cy="92" r="8" fill="#e8f4f8" opacity="0.14"/>
+    <path d="M118 56 C130 46 150 42 168 44" fill="none" stroke="#fff" stroke-width="5" opacity="0.22" stroke-linecap="round"/>
+    <path d="M150 52 L158 66 L152 80 L164 98 L160 118 L170 134" fill="none" stroke="#e8f4f8" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M158 66 L176 72 L186 66 L200 78" fill="none" stroke="#e8f4f8" stroke-width="1.6" stroke-linejoin="round"/>
+  </g>
+  <path d="M112 50 C122 36 140 28 160 26" fill="none" stroke="#fff" stroke-width="3" opacity="0.4" stroke-linecap="round"/>`;
+  },
+  'dropoff-compass': (uid) => {
+    let ticks = '';
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2 - Math.PI / 2;
+      const r1 = i % 4 === 0 ? 30 : i % 2 === 0 ? 36 : 39;
+      const c = Math.cos(a), s = Math.sin(a);
+      ticks += `<line x1="${(160 + r1 * c).toFixed(1)}" y1="${(92 + r1 * s).toFixed(1)}" x2="${(160 + 43 * c).toFixed(1)}" y2="${(92 + 43 * s).toFixed(1)}" stroke="#2b2f33" stroke-width="${i % 4 === 0 ? 3 : 1.5}" stroke-linecap="round"/>`;
+    }
+    return `<defs>${grad(uid, '#c9a14a', '#b38c3a', '#e2c57f')}</defs>
+  ${shadow}
+  <circle cx="160" cy="22" r="8" fill="none" stroke="#b38c3a" stroke-width="4"/>
+  <rect x="152" y="28" width="16" height="10" rx="3" fill="#a07c30"/>
+  <circle cx="160" cy="92" r="58" fill="url(#${uid}-b)"/>
+  <circle cx="160" cy="92" r="50" fill="#8a6a2a"/>
+  <circle cx="160" cy="92" r="47" fill="#f4f1e6"/>
+  <circle cx="160" cy="92" r="24" fill="none" stroke="#2b2f33" stroke-width="1" opacity="0.35"/>
+  ${ticks}
+  <path d="M160 48 L165 56 L155 56 Z" fill="#c8463c"/>
+  <g transform="rotate(135 160 92)">
+    <path d="M160 54 L168 92 L152 92 Z" fill="#c8463c"/>
+    <path d="M160 130 L168 92 L152 92 Z" fill="#2b2f33"/>
+  </g>
+  <circle cx="160" cy="92" r="5" fill="#e2c57f" stroke="#8a6a2a" stroke-width="1.5"/>
+  <path d="M126 70 C134 56 148 50 162 50" fill="none" stroke="#fff" stroke-width="6" opacity="0.5" stroke-linecap="round"/>
+  <circle cx="186" cy="118" r="3" fill="#fff" opacity="0.5"/>
+  <path d="M112 62 C120 46 140 36 160 35" fill="none" stroke="#fff" stroke-width="3" opacity="0.35" stroke-linecap="round"/>`;
+  },
 };
 
 /** SVG for a find (viewBox 0 0 320 180). `idPrefix` must be unique per rendered instance: gradient ids are global in HTML. */
