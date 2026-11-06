@@ -8,6 +8,22 @@ export type FindBuilder = (uid: string) => string;
 
 const shadow = '<ellipse cx="160" cy="156" rx="96" ry="9" fill="#000" opacity="0.12"/>';
 
+// A closed, roughly elliptical outline with a bumpy (shell-like) edge, rotated by `rot` degrees.
+function scallop(cx: number, cy: number, rx: number, ry: number, n: number, amp: number, rot = 0): string {
+  const r = (rot * Math.PI) / 180;
+  const pt = (a: number, k: number) => {
+    const x = Math.cos(a) * rx * k, y = Math.sin(a) * ry * k;
+    return `${(cx + x * Math.cos(r) - y * Math.sin(r)).toFixed(1)} ${(cy + x * Math.sin(r) + y * Math.cos(r)).toFixed(1)}`;
+  };
+  let d = `M${pt(0, 1)}`;
+  for (let i = 0; i < n; i++) {
+    const a0 = (i / n) * 2 * Math.PI, a1 = ((i + 1) / n) * 2 * Math.PI;
+    const k = 1 + amp * (0.6 + (0.4 * ((i * 7) % 5)) / 4);
+    d += ` Q${pt((a0 + a1) / 2, k)} ${pt(a1, i === n - 1 ? 1 : 1 - amp * 0.3 * (i % 2))}`;
+  }
+  return `${d} Z`;
+}
+
 export const FIND_ART: Record<string, FindBuilder> = {
   'shallows-rubber-duck': (uid) => `<defs>${grad(uid, '#f3dc6b', '#eecf55', '#f8ecb4')}</defs>
   ${shadow}
@@ -133,6 +149,74 @@ export const FIND_ART: Record<string, FindBuilder> = {
   <path d="M196 116 C206 114 216 118 216 125 C214 130 204 130 198 127 C192 124 190 118 196 116 Z" fill="#b8735f" opacity="0.7"/>
   <path d="M176 98 C204 88 236 100 242 120 C246 136 238 146 222 147" fill="none" stroke="#fbf1e1" stroke-width="3.5" stroke-linecap="round"/>
   <path d="M98 92 C116 82 138 78 158 77" fill="none" stroke="#fff" stroke-width="3" opacity="0.5" stroke-linecap="round"/>`,
+  'reef-coral-coin': (uid) => `<defs>${grad(uid, '#e3c25e', '#d8b04a', '#f3dc8e')}</defs>
+  ${shadow}
+  <g transform="rotate(-14 160 88)">
+    <rect x="160" y="26" width="11" height="124" fill="#a8842f"/>
+    <ellipse cx="171" cy="88" rx="58" ry="62" fill="#a8842f"/>
+    <ellipse cx="160" cy="88" rx="58" ry="62" fill="url(#${uid}-b)"/>
+    <ellipse cx="160" cy="88" rx="55" ry="59" fill="none" stroke="#c49a3a" stroke-width="5" opacity="0.75"/>
+    <ellipse cx="160" cy="88" rx="44" ry="48" fill="none" stroke="#c49a3a" stroke-width="2" opacity="0.7"/>
+    <path d="M160 64 L166 80 L183 80 L169 90 L174 106 L160 96 L146 106 L151 90 L137 80 L154 80 Z" fill="#c9a03e" opacity="0.75"/>
+    <path d="M160 68 L164 80 L160 78 Z" fill="#f3dc8e" opacity="0.7"/>
+    <path d="M104 74 L109 78 L104 82 Z M196 38 L199 44 L193 43 Z M214 104 L208 106 L211 99 Z" fill="#9b7c2e"/>
+    <path d="M118 46 C130 34 150 28 168 30" fill="none" stroke="#fff" stroke-width="3" opacity="0.5" stroke-linecap="round"/>
+    <path d="M196 120 C206 110 212 98 213 86" fill="none" stroke="#f3dc8e" stroke-width="3" opacity="0.6" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(20 -4)">
+  <path d="M100 112 C98 96 112 90 122 96 C128 86 142 88 144 100 C156 98 162 110 156 120 C166 126 160 142 148 144 C140 152 124 152 116 144 C104 146 96 136 100 126 C94 122 94 114 100 112 Z" fill="#c95c6c"/>
+  <circle cx="112" cy="106" r="10" fill="#e47c8a"/><circle cx="132" cy="100" r="9" fill="#e47c8a"/>
+  <circle cx="124" cy="120" r="12" fill="#e47c8a"/><circle cx="146" cy="118" r="8" fill="#e47c8a"/>
+  <circle cx="108" cy="128" r="8" fill="#e47c8a"/><circle cx="132" cy="138" r="9" fill="#e47c8a"/>
+  <circle cx="150" cy="134" r="7" fill="#e47c8a"/>
+  <g fill="#c95c6c"><circle cx="112" cy="107" r="1.8"/><circle cx="132" cy="101" r="1.8"/><circle cx="124" cy="121" r="2"/><circle cx="146" cy="119" r="1.6"/><circle cx="108" cy="129" r="1.6"/><circle cx="132" cy="139" r="1.8"/><circle cx="150" cy="135" r="1.5"/></g>
+  <g fill="#f8c1c8" opacity="0.7"><circle cx="108" cy="102" r="2.5"/><circle cx="128" cy="96" r="2.2"/><circle cx="119" cy="115" r="3"/><circle cx="143" cy="114" r="2"/></g>
+  </g>`,
+  'reef-diver-mask': (uid) => `<defs>${grad(uid, '#7fd3e0', '#4fb3c4', '#c4eef4')}</defs>
+  ${shadow}
+  <path d="M228 96 C252 88 262 70 246 56 C234 46 212 46 196 54" fill="none" stroke="#3a3f45" stroke-width="10" stroke-linecap="round"/>
+  <path d="M232 92 C250 84 256 70 244 60" fill="none" stroke="#4d535a" stroke-width="2" stroke-dasharray="4 5"/>
+  <path d="M92 98 C72 100 62 112 63 128 C64 136 66 141 68 146" fill="none" stroke="#3a3f45" stroke-width="10"/>
+  <path d="M62 145 L65 152 L68 147 L71 153 L74 146 Z" fill="#3a3f45"/>
+  <path d="M88 102 C74 106 68 116 68 128" fill="none" stroke="#4d535a" stroke-width="2" stroke-dasharray="4 5"/>
+  <rect x="84" y="88" width="14" height="20" rx="4" fill="#2b2f33"/><rect x="222" y="86" width="14" height="20" rx="4" fill="#2b2f33"/>
+  <path d="M92 86 C92 68 112 62 160 62 C208 62 228 68 228 86 L228 116 C228 132 214 140 198 140 L182 140 C178 150 142 150 138 140 L122 140 C106 140 92 132 92 116 Z" fill="#2b2f33"/>
+  <path d="M100 70 C124 64 196 64 220 70" fill="none" stroke="#535a62" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M102 84 C102 74 116 72 154 72 L154 128 C150 132 138 132 126 132 C110 132 102 126 102 114 Z" fill="url(#${uid}-b)" fill-opacity="0.8"/>
+  <path d="M218 84 C218 74 204 72 166 72 L166 128 C170 132 182 132 194 132 C210 132 218 126 218 114 Z" fill="url(#${uid}-b)" fill-opacity="0.8"/>
+  <path d="M112 112 L134 76 L146 76 L122 118 Z M176 112 L198 76 L206 76 L184 116 Z" fill="#fff" opacity="0.3"/>
+  <path d="M108 86 C110 80 116 78 124 78" fill="none" stroke="#fff" stroke-width="3" opacity="0.6" stroke-linecap="round"/>
+  <path d="M146 140 C150 146 170 146 174 140" fill="none" stroke="#454b52" stroke-width="2.5" stroke-linecap="round"/>`,
+  'reef-empty-oyster': (uid) => `<defs>${grad(uid, '#8d8f86', '#6f7169', '#b4b6ad')}</defs>
+  ${shadow}
+  <path d="${scallop(176, 76, 66, 32, 18, 0.12, -24)}" fill="url(#${uid}-b)"/>
+  <path d="${scallop(178, 77, 52, 22, 14, 0.05, -24)}" fill="#e9e6f0"/>
+  <path d="M150 92 C166 80 196 66 216 62" fill="none" stroke="#d5d0e3" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
+  <path d="M160 70 C176 62 196 56 208 56" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <path d="M96 118 C98 106 110 100 122 104 L118 122 Z" fill="#6f7169"/>
+  <path d="${scallop(164, 126, 74, 26, 22, 0.1)}" fill="url(#${uid}-b)"/>
+  <path d="M100 136 C130 150 196 152 232 134 M108 142 C140 152 190 152 224 140" fill="none" stroke="#5d5f58" stroke-width="2" opacity="0.6"/>
+  <ellipse cx="166" cy="121" rx="58" ry="17" fill="#e9e6f0"/>
+  <path d="M116 124 C140 136 196 136 218 120 C200 130 140 130 116 124 Z" fill="#d5d0e3"/>
+  <ellipse cx="174" cy="122" rx="12" ry="5.5" fill="#d5d0e3"/>
+  <ellipse cx="174" cy="121" rx="8" ry="3" fill="#c4bed6"/>
+  <path d="M128 114 C144 108 168 107 190 110" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+  <circle cx="108" cy="112" r="5" fill="#5d5f58"/>`,
+  'reef-amphora': (uid) => `<defs>${grad(uid, '#c47a4f', '#b8683f', '#d99b74')}</defs>
+  ${shadow}
+  <g transform="translate(0 10) rotate(12 160 100)">
+    <path d="M90 93 C86 70 112 64 128 76 M90 107 C86 130 112 136 128 124" fill="none" stroke="#a85e38" stroke-width="7" stroke-linecap="round"/>
+    <path d="M236 93 L262 100 L236 107 Z" fill="#a85e38"/>
+    <path d="M112 92 C124 80 136 64 166 62 C206 60 232 82 240 96 L240 104 C232 118 206 140 166 138 C136 136 124 120 112 108 Z" fill="url(#${uid}-b)"/>
+    <path d="M76 93 L114 91 L114 109 L76 107 Z" fill="url(#${uid}-b)"/>
+    <rect x="66" y="86" width="13" height="28" rx="4" fill="#b8683f"/>
+    <rect x="68" y="88" width="4" height="24" rx="2" fill="#d99b74" opacity="0.7"/>
+    <path d="M148 64 C155 84 155 116 148 136 L161 138 C168 116 168 84 161 62 Z" fill="#7a3b20"/>
+    <path d="M172 62 C178 84 178 116 172 138" fill="none" stroke="#7a3b20" stroke-width="2.5" opacity="0.8"/>
+    <path d="M136 74 C158 64 196 64 222 80" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+  </g>
+  <path d="M196 156 C204 140 228 136 246 144 C258 148 264 154 262 158 Z" fill="#d8c39a"/>
+  <path d="M208 148 C220 144 236 145 248 150" fill="none" stroke="#efe0bd" stroke-width="2" stroke-linecap="round" opacity="0.7"/>`,
 };
 
 /** SVG for a find (viewBox 0 0 320 180). `idPrefix` must be unique per rendered instance: gradient ids are global in HTML. */
