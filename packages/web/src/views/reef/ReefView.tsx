@@ -10,6 +10,7 @@ import { Tank } from '../../components/Tank';
 import { Loading, chip } from '../../components/ui';
 import { AgentTracking, Header } from './Header';
 import { Collection } from './Collection';
+import { Expeditions } from './Expeditions';
 import { ModelsTable, ProjectsTable, SessionsTable } from './Tables';
 import { TrendChart } from './TrendChart';
 import { Vitals } from './Vitals';
@@ -21,6 +22,7 @@ import { Vitals } from './Vitals';
 const TABS = [
   ['collection', 'Collection'],
   ['inventory', 'Inventory'],
+  ['expeditions', 'Expeditions'],
   ['models', 'By Model'],
   ['projects', 'By Project'],
   ['sessions', 'Session Leaderboard'],
@@ -79,6 +81,7 @@ export function ReefView() {
       <div className="mt-5">
         {tab === 'collection' && <Collection highlight={highlight} held={heldRewards} ladderTokens={summary.data?.rewards.tokens} />}
         {tab === 'inventory' && <ReefInventory held={heldRewards} />}
+        {tab === 'expeditions' && <Expeditions />}
         {tab === 'models' && <ModelsTable agent={agent} />}
         {tab === 'projects' && <ProjectsTable agent={agent} />}
         {tab === 'sessions' && <SessionsTable agent={agent} />}
