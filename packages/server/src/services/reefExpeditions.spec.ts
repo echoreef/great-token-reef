@@ -1,7 +1,7 @@
 import { DEFAULT_TYPICAL_DAY, LEGENDARY_ID_BASE, SPECIES_COUNT, speciesRarity, type Rarity } from '@gtr/shared';
 import { describe, expect, it } from 'vitest';
 import { fixtureDb } from './fixtures.ts';
-import { activeDayTotals, expeditionState } from './reefExpeditions.ts';
+import { activeDayTotals, expeditionState, startExpedition } from './reefExpeditions.ts';
 import { setSetting } from './settings.ts';
 
 const NOW = Math.floor(Date.now() / 1000);
@@ -60,5 +60,24 @@ describe('expedition state', () => {
     expect(s.trip).toBeNull();
     expect(s.fish.map((f) => f.species)).toEqual([COMMON, RARE, EPIC, LEGEND, LEGEND + 1]);
     expect(s.fish[0]).toEqual({ species: COMMON, xp: 0, level: 1, trips: 0, strength: 1, titles: [], chosenTitle: null, shownTitle: null });
+  });
+});
+
+describe('starting a trip', () => {
+  it('locks the party strength and the trip length', () => {
+    const db = tank();
+    for (const d of [1, 2, 3]) addUsage(db, NOW - d * DAY, 100 * M);
+    const r = startExpedition(db, { depth: 'reef', party: [COMMON, RARE, LEGEND] }, NOW);
+    expect(r.ok && r.value.trip).toMatchObject({ depth: 'reef', party: [COMMON, RARE, LEGEND], strength: 1 + 7 + 16, lengthTokens: 100 * M, progressTokens: 0, returned: false });
+  });
+  it('refuses a broken party', () => {
+    const db = tank();
+    expect(startExpedition(db, { depth: 'reef', party: [COMMON, RARE, 9999] }, NOW)).toEqual({ ok: false, status: 400, error: 'only fish already released into the tank can go' });
+    expect(startExpedition(db, { depth: 'reef', party: [COMMON, LEGEND, LEGEND + 1] }, NOW)).toMatchObject({ ok: false, status: 400 });
+  });
+  it('keeps one party out at a time', () => {
+    const db = tank();
+    expect(startExpedition(db, { depth: 'shallows', party: [COMMON, RARE, EPIC] }, NOW).ok).toBe(true);
+    expect(startExpedition(db, { depth: 'shallows', party: [COMMON, RARE, EPIC] }, NOW)).toEqual({ ok: false, status: 409, error: 'a party is already out' });
   });
 });

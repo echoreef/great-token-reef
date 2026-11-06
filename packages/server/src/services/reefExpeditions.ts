@@ -1,6 +1,7 @@
 import {
-  DEPTH_RULES, TYPICAL_WINDOW, fishStrength, isTitleId, levelForXp, shownTitle, typicalDay,
-  type Depth, type FishRecord, type ReefExpeditionFind, type ReefExpeditionTrip, type ReefExpeditions, type TitleId,
+  DEPTH_RULES, TYPICAL_WINDOW, fishStrength, isTitleId, levelForXp, partyProblem, partyStrength, shownTitle, tripLength, typicalDay,
+  type Depth, type FishRecord, type PartyProblem, type ReefExpeditionFind, type ReefExpeditionStartBody,
+  type ReefExpeditionTrip, type ReefExpeditions, type TitleId,
 } from '@gtr/shared';
 import type { Db } from '../store/db.ts';
 import { getReleasedEventId } from './reefEvents.ts';
@@ -15,6 +16,13 @@ export type ExpeditionResult<T> = { ok: true; value: T } | { ok: false; status: 
 const COUNTED = `(agent = 'claude' OR ts >= ?)`;
 /** how far back to look for active days */
 const LOOKBACK = 365 * 86400;
+
+const PARTY_ERRORS: Record<PartyProblem, string> = {
+  size: 'a party is exactly three fish',
+  duplicate: 'a fish can only join a party once',
+  'not-released': 'only fish already released into the tank can go',
+  legendaries: 'a party can include at most one legendary',
+};
 
 interface TripRow {
   id: number;
@@ -122,4 +130,17 @@ export function expeditionState(db: Db, now: number): ReefExpeditions {
   });
   const open = openTrip(db);
   return { typicalDayTokens: typicalDay(activeDayTotals(db, now)), trip: open && tripView(db, open), fish, finds: findRows(db) };
+}
+
+export function startExpedition(db: Db, body: ReefExpeditionStartBody, now: number): ExpeditionResult<ReefExpeditions> {
+  if (openTrip(db)) return { ok: false, status: 409, error: 'a party is already out' };
+  const problem = partyProblem(body.party, releasedSpecies(db));
+  if (problem) return { ok: false, status: 400, error: PARTY_ERRORS[problem] };
+  const records = fishRecords(db);
+  const strength = partyStrength(body.party.map((species) => ({ species, xp: records.get(species)?.xp ?? 0 })), completedSets(db));
+  const length = tripLength(body.depth, typicalDay(activeDayTotals(db, now)));
+  db.prepare(
+    'INSERT INTO expedition_trips (depth, party_json, strength, length_tokens, started_at) VALUES (?, ?, ?, ?, ?)',
+  ).run(body.depth, JSON.stringify(body.party), strength, length, now);
+  return { ok: true, value: expeditionState(db, now) };
 }
