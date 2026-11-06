@@ -1,9 +1,13 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { openDb } from '../packages/server/src/store/db.ts';
+import { openDb, type Db } from '../packages/server/src/store/db.ts';
 import { runMigrations } from '../packages/server/src/store/migrate.ts';
 import { MIGRATIONS } from '../packages/server/src/store/migrations.ts';
 import { setSetting } from '../packages/server/src/services/settings.ts';
+import { ClaudeUsageScanner } from '../packages/server/src/services/claudeUsageScanner.ts';
+import { TOK } from '../packages/server/src/services/reefRows.ts';
+import { activeDayTotals } from '../packages/server/src/services/reefExpeditions.ts';
+import { partyStrength, tripLength, typicalDay } from '../packages/shared/src/expeditions.ts';
 
 // Writes a made-up Claude Code history and an empty Reef database so the app can be run
 // (and screenshotted) without touching real session logs. Usage: demo-data.ts <dir>.
@@ -114,5 +118,57 @@ for (const [n, s] of SESSIONS.entries()) {
   mkdirSync(projectDir, { recursive: true });
   writeFileSync(join(projectDir, `${s.id}.jsonl`), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
 }
+
+// Starts the demo partway through: a few levelled fish, titles, three shallows finds, and a reef trip about 60% full.
+function seedExpeditions(db: Db, nowS: number): void {
+  const species = (db.prepare(
+    `SELECT species FROM cc_catches WHERE rarity != 'legendary' GROUP BY species ORDER BY MIN(id) LIMIT 5`,
+  ).all() as { species: number }[]).map((r) => r.species);
+  if (species.length < 5) return;
+  const [a, b, c, d, e] = species as [number, number, number, number, number];
+  const trip = db.prepare(
+    `INSERT INTO expedition_trips (depth, party_json, strength, length_tokens, started_at, welcomed_at, xp_awarded)
+     VALUES (?, ?, ?, 1, ?, ?, ?)`,
+  );
+  const past = (depth: string, party: number[], strength: number, daysAgo: number, xp: number) =>
+    Number(trip.run(depth, JSON.stringify(party), strength, nowS - daysAgo * 86400, nowS - daysAgo * 86400, xp).lastInsertRowid);
+  // Levels 5 to 15: a 105 experience, b 45, c 10, d 95, e 60.
+  const s1 = past('shallows', [a, b, c], 12, 9, 4);
+  const s2 = past('shallows', [a, b, c], 14, 8, 3);
+  const s3 = past('shallows', [a, b, c], 15, 7, 3);
+  const r1 = past('reef', [a, b, d], 30, 5, 35);
+  const r2 = past('reef', [a, d, e], 33, 2, 60);
+  const find = db.prepare(`INSERT INTO expedition_finds (find, depth, trip_id, found_at) VALUES (?, 'shallows', ?, ?)`);
+  find.run('shallows-rubber-duck', s1, nowS - 9 * 86400);
+  find.run('shallows-sand-dollar', s2, nowS - 8 * 86400);
+  find.run('shallows-bottle-message', s3, nowS - 7 * 86400);
+  const title = db.prepare('INSERT INTO expedition_titles (species, title, trip_id, earned_at) VALUES (?, ?, ?, ?)');
+  const earn = (s: number, t: string, tripId: number, daysAgo: number) => title.run(s, t, tripId, nowS - daysAgo * 86400);
+  for (const s of [a, b, c]) earn(s, 'treasure-hunter', s1, 9);
+  for (const s of [a, b, d]) earn(s, 'reef-runner', r1, 5);
+  for (const s of [a, b]) earn(s, 'riptide', r1, 5);
+  for (const s of [d, e]) earn(s, 'riptide', r2, 2);
+  earn(e, 'reef-runner', r2, 2);
+  // The open reef trip is one typical day long and about 60% full.
+  const length = tripLength('reef', typicalDay(activeDayTotals(db, nowS)));
+  const rows = db.prepare(`SELECT ts, ${TOK} AS t FROM cc_usage ORDER BY ts DESC`).all() as { ts: number; t: number }[];
+  let filled = 0;
+  let start = nowS;
+  for (const r of rows) {
+    if (filled >= length * 0.6) break;
+    filled += r.t;
+    start = r.ts;
+  }
+  const strength = partyStrength([{ species: b, xp: 45 }, { species: c, xp: 10 }, { species: e, xp: 60 }], new Set());
+  db.prepare(
+    'INSERT INTO expedition_trips (depth, party_json, strength, length_tokens, started_at) VALUES (?, ?, ?, ?, ?)',
+  ).run('reef', JSON.stringify([b, c, e]), strength, length, start);
+}
+
+// Scan now so the seed can use species the demo will catch; the server's own scan then finds nothing new.
+const seedDb = openDb(join(dataDir, 'reef.db'));
+new ClaudeUsageScanner({ db: seedDb, dir: claudeDir }).scan();
+seedExpeditions(seedDb, Math.floor(now / 1000));
+seedDb.close();
 
 console.log(`demo data written to ${dir} (${SESSIONS.length} sessions)`);
