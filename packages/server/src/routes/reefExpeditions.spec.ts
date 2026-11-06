@@ -82,6 +82,7 @@ describe('expedition routes', () => {
     expect(home.state.trip).toBeNull();
     expect((await call('PUT', `/api/reef/expeditions/fish/${PARTY[0]}/title`, { title: 'leviathan' })).status).toBe(400);
     expect((await call('PUT', '/api/reef/expeditions/fish/x/title', { title: null })).status).toBe(400);
+    expect((await call('PUT', '/api/reef/expeditions/fish/999999/title', { title: null })).status).toBe(400);
     await parse(await call('PUT', `/api/reef/expeditions/fish/${PARTY[0]}/title`, { title: null }), ReefExpeditions);
     expect(seen).toEqual(['reef', 'reef', 'reef']);
   });

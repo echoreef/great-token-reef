@@ -185,6 +185,7 @@ export function welcomeHome(db: Db, now: number, rngFor = (tripId: number) => se
 }
 
 export function chooseTitle(db: Db, species: number, title: string | null, now: number): ExpeditionResult<ReefExpeditions> {
+  if (!releasedSpecies(db).has(species)) return { ok: false, status: 400, error: 'only fish in the tank can hold a title' };
   if (title !== null && !(isTitleId(title) && earnedTitles(db).get(species)?.includes(title))) {
     return { ok: false, status: 400, error: 'that fish has not earned that title' };
   }

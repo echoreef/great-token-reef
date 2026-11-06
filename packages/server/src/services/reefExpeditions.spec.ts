@@ -168,6 +168,7 @@ describe('choosing a title', () => {
     addUsage(db, NOW + 10, DEFAULT_TYPICAL_DAY);
     welcomeHome(db, NOW + 20, always);
     expect(chooseTitle(db, RARE, 'leviathan', NOW)).toEqual({ ok: false, status: 400, error: 'that fish has not earned that title' });
+    expect(chooseTitle(db, 9999, null, NOW)).toEqual({ ok: false, status: 400, error: 'only fish in the tank can hold a title' });
     const r = chooseTitle(db, RARE, 'treasure-hunter', NOW);
     expect(r.ok && r.value.fish.find((f) => f.species === RARE)?.chosenTitle).toBe('treasure-hunter');
     const cleared = chooseTitle(db, RARE, null, NOW);
