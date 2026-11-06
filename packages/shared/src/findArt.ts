@@ -525,6 +525,78 @@ export const FIND_ART: Record<string, FindBuilder> = {
   <path d="M136 52 C166 42 204 50 232 72" fill="none" stroke="#c49a6c" stroke-width="3" opacity="0.85" stroke-linecap="round"/>
   <path d="M112 64 C98 80 92 100 93 122" fill="none" stroke="#c49a6c" stroke-width="1.8" opacity="0.6" stroke-linecap="round"/>
   <ellipse cx="166" cy="48" rx="6" ry="2.2" fill="#f1dcc0" opacity="0.85" transform="rotate(-2 166 48)"/>`,
+  'abyss-sea-cable': (uid) => `<defs>${grad(uid, '#3a3f45', '#2b2f33', '#545b63')}</defs>
+  ${shadow}
+  <path d="M60 112 C110 98 160 118 230 98 L236 136 C166 156 112 136 64 150 Z" fill="url(#${uid}-b)"/>
+  <path d="M62 131 C112 117 164 137 233 117" fill="none" stroke="#1f2327" stroke-width="34" stroke-dasharray="2 14" opacity="0.3"/>
+  <path d="M64 113 C112 100 162 120 228 100" fill="none" stroke="#8a939c" stroke-width="2" opacity="0.75" stroke-linecap="round"/>
+  <path d="M66 119 C112 107 162 127 228 107" fill="none" stroke="#fff" stroke-width="5" opacity="0.1" stroke-linecap="round"/>
+  <path d="M238 100 C246 92 252 88 260 86 M240 98 C248 86 250 80 256 76 M240 134 C248 142 254 146 262 148 M242 130 C252 134 258 132 266 136" fill="none" stroke="#c47a4f" stroke-width="1.6" stroke-linecap="round"/>
+  <ellipse cx="233" cy="117" rx="11" ry="19" fill="#1e2226" transform="rotate(-6 233 117)"/>
+  <ellipse cx="234" cy="117" rx="8" ry="15" fill="#7a8187" transform="rotate(-6 234 117)"/>
+  <path d="M234 108 C242 104 248 100 254 98" fill="none" stroke="#c8463c" stroke-width="6" stroke-linecap="round"/>
+  <path d="M236 118 C244 118 252 120 258 122" fill="none" stroke="#3c86c9" stroke-width="6" stroke-linecap="round"/>
+  <path d="M234 128 C240 134 246 138 252 140" fill="none" stroke="#e3c25e" stroke-width="6" stroke-linecap="round"/>
+  <path d="M236 106 C242 103 246 100 250 99 M238 116 C244 116 250 117 254 119" fill="none" stroke="#fff" stroke-width="1.4" opacity="0.4" stroke-linecap="round"/>
+  <path d="M255 98 l9 -6 M255 98 l10 -1 M255 98 l8 4 M259 122 l9 -3 M259 122 l10 3 M259 122 l7 7 M253 140 l9 0 M253 140 l7 6 M253 140 l3 8" fill="none" stroke="#c47a4f" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M255 98 l10 -1 M259 122 l10 3 M253 140 l9 0" fill="none" stroke="#e6a77a" stroke-width="1" stroke-linecap="round"/>
+  <path d="M34 152 C40 130 62 118 82 124 C96 128 104 140 108 152 Z" fill="#57584c"/>
+  <path d="M42 136 C50 126 66 120 82 124" fill="none" stroke="#86866f" stroke-width="2" opacity="0.7" stroke-linecap="round"/>`,
+  'abyss-black-pearl': (uid) => `<defs>${grad(uid, '#e9e6f0', '#d5d0e3', '#f4f2f8')}
+    <radialGradient id="${uid}-g" cx="0.38" cy="0.34" r="0.7"><stop offset="0" stop-color="#6a5a8c"/><stop offset="1" stop-color="#1c1e26"/></radialGradient></defs>
+  ${shadow}
+  <ellipse cx="160" cy="108" rx="88" ry="24" fill="#cfc6e4"/>
+  <ellipse cx="160" cy="110" rx="76" ry="17" fill="#f4f2f8" opacity="0.6"/>
+  <circle cx="160" cy="92" r="34" fill="url(#${uid}-g)"/>
+  <circle cx="160" cy="92" r="33.2" fill="none" stroke="#9b8cc4" stroke-width="1.5" opacity="0.6"/>
+  <path d="M134 82 C138 70 150 62 164 62" fill="none" stroke="#c6b4f0" stroke-width="3" opacity="0.55" stroke-linecap="round"/>
+  <path d="M188 96 C186 106 180 114 172 118" fill="none" stroke="#7fd3c8" stroke-width="2.5" opacity="0.45" stroke-linecap="round"/>
+  <ellipse cx="146" cy="76" rx="6" ry="3.5" fill="#fff" opacity="0.85" transform="rotate(-35 146 76)"/>
+  <path d="M70 106 C76 140 116 156 160 156 C204 156 244 140 250 106 C226 122 194 128 160 128 C126 128 94 122 70 106 Z" fill="url(#${uid}-b)"/>
+  <path d="M160 154 L92 116 M160 154 L112 123 M160 154 L136 127 M160 154 L160 128 M160 154 L184 127 M160 154 L208 123 M160 154 L228 116" stroke="#bdb5d2" stroke-width="2" opacity="0.7" stroke-linecap="round"/>
+  <path d="M74 108 C98 124 128 130 160 130 C192 130 222 124 246 108" fill="none" stroke="#fff" stroke-width="2" opacity="0.7" stroke-linecap="round"/>`,
+  'abyss-lost-probe': (uid) => `<defs>${grad(uid, '#c3c8ce', '#9aa1a8', '#e3e6ea')}
+    <radialGradient id="${uid}-g" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ff9a9a" stop-opacity="0.9"/><stop offset="1" stop-color="#ff9a9a" stop-opacity="0"/></radialGradient></defs>
+  ${shadow}
+  <g transform="rotate(-12 160 112)">
+    <path d="M204 94 L246 80 L252 84 L226 100 Z" fill="#6f767d"/>
+    <path d="M196 92 L236 70 L244 72 L232 92 Z" fill="#9aa1a8"/>
+    <path d="M196 132 L236 154 L244 152 L232 132 Z" fill="#9aa1a8"/>
+    <path d="M84 92 L222 92 Q228 92 228 98 L228 126 Q228 132 222 132 L84 132 C62 132 48 120 46 112 C48 104 62 92 84 92 Z" fill="url(#${uid}-b)"/>
+    <rect x="226" y="98" width="9" height="28" rx="2" fill="#7d848b"/>
+    <rect x="100" y="92" width="4" height="40" fill="#7d848b" opacity="0.6"/>
+    <rect x="190" y="92" width="4" height="40" fill="#7d848b" opacity="0.6"/>
+    <path d="M200 113 L244 116 L246 121 L204 122 Z" fill="#7d848b"/>
+    <path d="M60 102 C70 97 80 95 90 95 L220 95" fill="none" stroke="#fff" stroke-width="3" opacity="0.55" stroke-linecap="round"/>
+    <rect x="122" y="100" width="54" height="23" rx="2" fill="#e8e4d8"/>
+    <circle cx="125.5" cy="103.5" r="1.2" fill="#9aa1a8"/><circle cx="172.5" cy="103.5" r="1.2" fill="#9aa1a8"/>
+    <circle cx="125.5" cy="119.5" r="1.2" fill="#9aa1a8"/><circle cx="172.5" cy="119.5" r="1.2" fill="#9aa1a8"/>
+    <rect x="130" y="106" width="24" height="2.6" fill="#8a8576"/>
+    <path d="M148 112 C156 110 166 112 170 118 L150 120 Z" fill="#cfc9b8"/>
+    <path d="M146 104 L166 120 M154 103 L172 116 M140 112 L156 121" stroke="#a39d8c" stroke-width="1.2" stroke-linecap="round"/>
+    <circle cx="98" cy="84" r="34" fill="url(#${uid}-g)"/>
+    <path d="M90 93 C90 80 106 80 106 93 Z" fill="#ff4d4d"/>
+    <circle cx="95" cy="86" r="2" fill="#fff" opacity="0.9"/>
+  </g>`,
+  'abyss-deeper-map': (uid) => `<defs>${grad(uid, '#4a4230', '#3a3324', '#5e553f')}</defs>
+  ${shadow}
+  <path d="M86 40 L120 34 L128 38 L170 32 L176 36 L214 30 L232 38 L226 60 L234 84 L228 108 L236 130 L226 150 L206 146 L196 152 L184 146 L172 152 L160 144 L148 150 L136 145 L122 152 L110 146 L96 150 L88 128 L94 104 L84 78 L92 58 Z" fill="url(#${uid}-b)"/>
+  <path d="M214 30 L232 38 L218 46 Z" fill="#6e6450"/>
+  <path d="M160 34 L156 146 M90 92 L232 96" stroke="#221d14" stroke-width="1.2" opacity="0.45"/>
+  <path d="M86 40 L120 34 L128 38 L170 32 L176 36 L214 30 L232 38 L226 60 L234 84 L228 108 L236 130 L226 150 L206 146 L196 152 L184 146 L172 152 L160 144 L148 150 L136 145 L122 152 L110 146 L96 150 L88 128 L94 104 L84 78 L92 58 Z" fill="none" stroke="#8f8466" stroke-width="1.6" opacity="0.8" stroke-linejoin="round"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M112 50 C130 62 120 78 138 88 C156 98 142 114 160 122 C176 130 166 140 172 152" stroke="#7fd3e0" stroke-width="14" opacity="0.12"/>
+    <path d="M112 50 C130 62 120 78 138 88 C156 98 142 114 160 122 C176 130 166 140 172 152" stroke="#7fd3e0" stroke-width="7" opacity="0.3"/>
+    <path d="M112 50 C130 62 120 78 138 88 C156 98 142 114 160 122 C176 130 166 140 172 152" stroke="#7fd3e0" stroke-width="2.6"/>
+    <path d="M112 50 C130 62 120 78 138 88 C156 98 142 114 160 122 C176 130 166 140 172 152" stroke="#e6fbff" stroke-width="0.9" opacity="0.8"/>
+  </g>
+  <circle cx="112" cy="50" r="4" fill="none" stroke="#d8cfb5" stroke-width="1.5"/>
+  <path d="M194 50 L194 140" stroke="#d8cfb5" stroke-width="1" opacity="0.5"/>
+  <path d="M194 56 h6" stroke="#d8cfb5" stroke-width="1.5"/>
+  <path d="M194 76 h10" stroke="#d8cfb5" stroke-width="2"/>
+  <path d="M194 98 h14" stroke="#d8cfb5" stroke-width="2.5"/>
+  <path d="M194 120 h20" stroke="#d8cfb5" stroke-width="3"/>
+  <path d="M194 140 h26" stroke="#d8cfb5" stroke-width="3.5"/>`,
 };
 
 /** SVG for a find (viewBox 0 0 320 180). `idPrefix` must be unique per rendered instance: gradient ids are global in HTML. */

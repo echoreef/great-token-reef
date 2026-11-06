@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findById } from './expeditionFinds.ts';
+import { FINDS, findById } from './expeditionFinds.ts';
 import { FIND_ART, findSvg } from './findArt.ts';
 
 const drawn = Object.keys(FIND_ART);
@@ -19,6 +19,9 @@ describe('find art', () => {
   it('gives each find its own drawing', () => {
     const svgs = drawn.map((id) => findSvg(id, 'same'));
     expect(new Set(svgs).size).toBe(svgs.length);
+  });
+  it('draws all 32 finds', () => {
+    expect(FINDS.filter((f) => !FIND_ART[f.id]).map((f) => f.id)).toEqual([]);
   });
   it('refuses an unknown find', () => {
     expect(() => findSvg('nope', 'p')).toThrow('no drawing for find nope');
