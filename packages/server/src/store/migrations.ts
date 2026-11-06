@@ -133,4 +133,39 @@ export const MIGRATIONS: Migration[] = [
       `ALTER TABLE cc_files ADD COLUMN skip_partial INTEGER NOT NULL DEFAULT 0`,
     ],
   },
+  {
+    version: 3,
+    name: 'expeditions',
+    up: [
+      `CREATE TABLE expedition_trips (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        depth TEXT NOT NULL CHECK (depth IN ('shallows','reef','dropoff','abyss')),
+        party_json TEXT NOT NULL,
+        strength INTEGER NOT NULL,
+        length_tokens INTEGER NOT NULL,
+        started_at INTEGER NOT NULL,
+        welcomed_at INTEGER,
+        xp_awarded INTEGER
+      )`,
+      // One party out at a time: at most one row is still waiting to be welcomed home.
+      `CREATE UNIQUE INDEX expedition_trips_one_out ON expedition_trips ((welcomed_at IS NULL)) WHERE welcomed_at IS NULL`,
+      `CREATE TABLE expedition_finds (
+        find TEXT PRIMARY KEY,
+        depth TEXT NOT NULL,
+        trip_id INTEGER NOT NULL REFERENCES expedition_trips(id),
+        found_at INTEGER NOT NULL
+      )`,
+      `CREATE TABLE expedition_titles (
+        species INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        trip_id INTEGER NOT NULL REFERENCES expedition_trips(id),
+        earned_at INTEGER NOT NULL,
+        PRIMARY KEY (species, title)
+      )`,
+      `CREATE TABLE expedition_fish (
+        species INTEGER PRIMARY KEY,
+        chosen_title TEXT
+      )`,
+    ],
+  },
 ];
