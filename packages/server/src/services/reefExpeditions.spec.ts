@@ -1,7 +1,7 @@
-import { DEFAULT_TYPICAL_DAY, LEGENDARY_ID_BASE, SPECIES_COUNT, speciesRarity, type Rarity } from '@gtr/shared';
+import { DEFAULT_TYPICAL_DAY, LEGENDARY_ID_BASE, SPECIES_COUNT, findsAt, speciesRarity, type Rarity } from '@gtr/shared';
 import { describe, expect, it } from 'vitest';
 import { fixtureDb } from './fixtures.ts';
-import { activeDayTotals, expeditionState, startExpedition } from './reefExpeditions.ts';
+import { activeDayTotals, expeditionState, startExpedition, welcomeHome } from './reefExpeditions.ts';
 import { setSetting } from './settings.ts';
 
 const NOW = Math.floor(Date.now() / 1000);
@@ -12,6 +12,8 @@ const COMMON = firstOf('common');
 const RARE = firstOf('rare');
 const EPIC = firstOf('epic');
 const LEGEND = LEGENDARY_ID_BASE;
+const always = () => () => 0;
+const never = () => () => 0.99;
 
 type TestDb = ReturnType<typeof fixtureDb>;
 let usageId = 0;
@@ -79,5 +81,50 @@ describe('starting a trip', () => {
     const db = tank();
     expect(startExpedition(db, { depth: 'shallows', party: [COMMON, RARE, EPIC] }, NOW).ok).toBe(true);
     expect(startExpedition(db, { depth: 'shallows', party: [COMMON, RARE, EPIC] }, NOW)).toEqual({ ok: false, status: 409, error: 'a party is already out' });
+  });
+});
+
+describe('welcoming a party home', () => {
+  it('waits until the trip is full', () => {
+    const db = tank();
+    startExpedition(db, { depth: 'shallows', party: [COMMON, RARE, EPIC] }, NOW);
+    addUsage(db, NOW + 10, DEFAULT_TYPICAL_DAY / 8);
+    expect(expeditionState(db, NOW + 20).trip).toMatchObject({ progressTokens: DEFAULT_TYPICAL_DAY / 8, returned: false });
+    expect(welcomeHome(db, NOW + 20, never)).toEqual({ ok: false, status: 409, error: 'the party is still out' });
+    addUsage(db, NOW + 30, DEFAULT_TYPICAL_DAY);
+    expect(expeditionState(db, NOW + 40).trip).toMatchObject({ progressTokens: DEFAULT_TYPICAL_DAY / 4, returned: true });
+  });
+  it('pays every fish, closes the trip and records a find', () => {
+    const db = tank();
+    startExpedition(db, { depth: 'shallows', party: [COMMON, RARE, EPIC] }, NOW);
+    addUsage(db, NOW + 10, DEFAULT_TYPICAL_DAY);
+    const r = welcomeHome(db, NOW + 20, always);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.value).toMatchObject({ depth: 'shallows', party: [COMMON, RARE, EPIC], xp: 1, find: findsAt('shallows')[0]!.id });
+    expect(r.value.titles).toEqual([COMMON, RARE, EPIC].map((species) => ({ species, title: 'treasure-hunter' })));
+    expect(r.value.state.trip).toBeNull();
+    expect(r.value.state.fish.find((f) => f.species === RARE)).toMatchObject({ xp: 1, level: 2, trips: 1, shownTitle: 'treasure-hunter' });
+    expect(r.value.state.finds).toEqual([{ id: findsAt('shallows')[0]!.id, depth: 'shallows', tripId: 1, party: [COMMON, RARE, EPIC], foundAt: NOW + 20 }]);
+    expect(welcomeHome(db, NOW + 30, always)).toEqual({ ok: false, status: 409, error: 'no party is out' });
+  });
+  it('gives the log title to the party that finds its last item', () => {
+    const db = tank();
+    db.prepare(`INSERT INTO expedition_trips (depth, party_json, strength, length_tokens, started_at, welcomed_at, xp_awarded)
+      VALUES ('shallows', '[]', 0, 1, ?, ?, 0)`).run(NOW - 10, NOW - 5);
+    for (const f of findsAt('shallows').slice(0, 7)) {
+      db.prepare('INSERT INTO expedition_finds (find, depth, trip_id, found_at) VALUES (?, ?, 1, ?)').run(f.id, 'shallows', NOW - 5);
+    }
+    startExpedition(db, { depth: 'shallows', party: [COMMON, RARE, EPIC] }, NOW);
+    addUsage(db, NOW + 10, DEFAULT_TYPICAL_DAY);
+    const r = welcomeHome(db, NOW + 20, always);
+    expect(r.ok && r.value.find).toBe(findsAt('shallows')[7]!.id);
+    expect(r.ok && r.value.titles.filter((t) => t.title === 'beachcomber').map((t) => t.species)).toEqual([COMMON, RARE, EPIC]);
+  });
+  it('pays a share and finds nothing below the recommended strength', () => {
+    const db = tank();
+    startExpedition(db, { depth: 'reef', party: [COMMON, RARE, EPIC] }, NOW);
+    addUsage(db, NOW + 10, DEFAULT_TYPICAL_DAY);
+    const r = welcomeHome(db, NOW + 20, always);
+    expect(r.ok && { xp: r.value.xp, find: r.value.find }).toEqual({ xp: Math.floor((4 * 19) / 27), find: null });
   });
 });

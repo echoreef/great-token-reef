@@ -1,7 +1,8 @@
 import {
-  DEPTH_RULES, TYPICAL_WINDOW, fishStrength, isTitleId, levelForXp, partyProblem, partyStrength, shownTitle, tripLength, typicalDay,
+  DEPTH_RULES, LOG_TITLE, TYPICAL_WINDOW, findsAt, fishStrength, isTitleId, levelForXp, milestoneTitles, partyProblem,
+  partyStrength, rollFind, seededRng, shownTitle, tripLength, tripPayout, typicalDay,
   type Depth, type FishRecord, type PartyProblem, type ReefExpeditionFind, type ReefExpeditionStartBody,
-  type ReefExpeditionTrip, type ReefExpeditions, type TitleId,
+  type ReefExpeditionTrip, type ReefExpeditionWelcome, type ReefExpeditions, type TitleId,
 } from '@gtr/shared';
 import type { Db } from '../store/db.ts';
 import { getReleasedEventId } from './reefEvents.ts';
@@ -143,4 +144,42 @@ export function startExpedition(db: Db, body: ReefExpeditionStartBody, now: numb
     'INSERT INTO expedition_trips (depth, party_json, strength, length_tokens, started_at) VALUES (?, ?, ?, ?, ?)',
   ).run(body.depth, JSON.stringify(body.party), strength, length, now);
   return { ok: true, value: expeditionState(db, now) };
+}
+
+export function welcomeHome(db: Db, now: number, rngFor = (tripId: number) => seededRng(`expedition#${tripId}`)): ExpeditionResult<ReefExpeditionWelcome> {
+  const open = openTrip(db);
+  if (!open) return { ok: false, status: 409, error: 'no party is out' };
+  if (tokensSince(db, open.started_at) < open.length_tokens) return { ok: false, status: 409, error: 'the party is still out' };
+  const party = JSON.parse(open.party_json) as number[];
+  const payout = tripPayout(open.depth, open.strength);
+  const found = new Set(findRows(db).map((f) => f.id));
+  const find = rollFind(open.depth, found, payout.findChance, rngFor(open.id));
+  const awarded: { species: number; title: TitleId }[] = [];
+  db.exec('SAVEPOINT reef_expedition');
+  try {
+    db.prepare('UPDATE expedition_trips SET welcomed_at = ?, xp_awarded = ? WHERE id = ?').run(now, payout.xp, open.id);
+    if (find) db.prepare('INSERT INTO expedition_finds (find, depth, trip_id, found_at) VALUES (?, ?, ?, ?)').run(find.id, open.depth, open.id, now);
+    const logDone = !!find && findsAt(open.depth).every((f) => f.id === find.id || found.has(f.id));
+    const records = fishRecords(db);
+    const held = earnedTitles(db);
+    const insert = db.prepare('INSERT OR IGNORE INTO expedition_titles (species, title, trip_id, earned_at) VALUES (?, ?, ?, ?)');
+    for (const species of party) {
+      const record = records.get(species);
+      const due = [...(record ? milestoneTitles(record) : []), ...(logDone ? [LOG_TITLE[open.depth]] : [])];
+      for (const title of due) {
+        if (held.get(species)?.includes(title)) continue;
+        insert.run(species, title, open.id, now);
+        awarded.push({ species, title });
+      }
+    }
+    db.exec('RELEASE reef_expedition');
+  } catch (err) {
+    db.exec('ROLLBACK TO reef_expedition');
+    db.exec('RELEASE reef_expedition');
+    throw err;
+  }
+  return {
+    ok: true,
+    value: { tripId: open.id, depth: open.depth, party, xp: payout.xp, find: find?.id ?? null, titles: awarded, state: expeditionState(db, now) },
+  };
 }
