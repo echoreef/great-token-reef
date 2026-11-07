@@ -2,7 +2,7 @@ import {
   DEPTH_RULES, findById, levelForXp, speciesName, titleName,
   type ReefExpeditionFish, type ReefExpeditionWelcome, type ReefExpeditions,
 } from '@gtr/shared';
-import { compactNumber } from './format';
+import { tripProgress } from './expeditionView';
 
 // Which tank fish are away on a trip, how the tank moves them, and what the minimap and hover card say.
 
@@ -55,13 +55,8 @@ export function minimapView(state: ReefExpeditions): MinimapView {
   const trip = state.trip;
   if (!trip) return { kind: 'rest' };
   if (trip.returned) return { kind: 'returned', party: trip.party };
-  return {
-    kind: 'out',
-    depth: DEPTH_RULES[trip.depth].label,
-    party: trip.party,
-    percent: Math.floor((100 * trip.progressTokens) / trip.lengthTokens),
-    progress: `${compactNumber(trip.progressTokens)} of ${compactNumber(trip.lengthTokens)}`,
-  };
+  const { percent, tokens } = tripProgress(trip);
+  return { kind: 'out', depth: DEPTH_RULES[trip.depth].label, party: trip.party, percent, progress: tokens };
 }
 
 /** The homecoming summary, one line each. */
