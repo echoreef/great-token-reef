@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearch } from '@tanstack/react-router';
-import { DEPTH_RULES, speciesName } from '@gtr/shared';
 import { Empty, Loading } from '../../components/ui';
 import { api } from '../../lib/api';
 import { compactNumber } from '../../lib/format';
 import { ExpeditionLog } from './ExpeditionLog';
 import { ExpeditionParty } from './ExpeditionParty';
 import { ExpeditionTitles } from './ExpeditionTitles';
+import { ExpeditionTrip } from './ExpeditionTrip';
 
 export function Expeditions() {
   const navigate = useNavigate();
@@ -31,12 +31,7 @@ export function Expeditions() {
         </p>
       </div>
       {trip ? (
-        <p className="text-sm">
-          {trip.party.map(speciesName).join(', ')}
-          {trip.returned
-            ? ` are back from the ${DEPTH_RULES[trip.depth].label.toLowerCase()}. Welcome them home from the full tank.`
-            : ` are out in the ${DEPTH_RULES[trip.depth].label.toLowerCase()}: ${compactNumber(trip.progressTokens)} of ${compactNumber(trip.lengthTokens)} tokens.`}
-        </p>
+        <ExpeditionTrip trip={trip} fish={q.data.fish} />
       ) : (
         <ExpeditionParty state={q.data} />
       )}

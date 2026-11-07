@@ -1,4 +1,4 @@
-import { DEPTH_RULES, PARTY_SIZE, isLegendary, tripPayout, type Depth, type ReefExpeditionFish } from '@gtr/shared';
+import { DEPTH_RULES, PARTY_SIZE, isLegendary, tripPayout, type Depth, type ReefExpeditionFish, type ReefExpeditionTrip } from '@gtr/shared';
 import { compactNumber } from './format';
 
 // Pure helpers behind the Expeditions tab.
@@ -39,4 +39,12 @@ export function depthPreview(depth: Depth, strength: number, typicalDayTokens: n
 /** Strongest first, then by species id, so the picker is stable. */
 export function pickerOrder(fish: readonly ReefExpeditionFish[]): ReefExpeditionFish[] {
   return [...fish].sort((a, b) => b.strength - a.strength || a.species - b.species);
+}
+
+/** How far a trip is: a whole percent for bars, and "207M of 576M" for labels. */
+export function tripProgress(trip: ReefExpeditionTrip): { percent: number; tokens: string } {
+  return {
+    percent: Math.floor((100 * trip.progressTokens) / trip.lengthTokens),
+    tokens: `${compactNumber(trip.progressTokens)} of ${compactNumber(trip.lengthTokens)}`,
+  };
 }
