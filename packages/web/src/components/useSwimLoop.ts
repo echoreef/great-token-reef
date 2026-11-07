@@ -9,6 +9,7 @@ import { fleckColors, flecksFor, type Fleck } from '../lib/tankChomp';
 import { setHunter, type Meal } from '../lib/tankHunt';
 import type { HuntMotion } from './useTankHunt';
 import type { ReleaseMotion } from './useTankRelease';
+import type { TripMotion } from './useTankExpedition';
 
 const SWELL_SECONDS = 1.5;
 /** Most bubbles and sand puffs alive in the bubble layer at once. */
@@ -36,6 +37,7 @@ export function useSwimLoop(
   hud: React.RefObject<HTMLDivElement | null>,
   sway: Sway,
   hunt: { readonly current: HuntMotion },
+  trip: { readonly current: TripMotion },
 ) {
   const fishRefs = useRef(new Map<string, HTMLDivElement>());
   const simRef = useRef<Swimmer[]>([]);
@@ -87,9 +89,10 @@ export function useSwimLoop(
         // Already swam out; React drops its spec on the next render.
         if (leaving.has(spec.id)) return [];
         const { returns } = hunt.current;
-        const x = dropIns.get(spec.id) ?? returns.get(spec.id);
+        const x = dropIns.get(spec.id) ?? returns.get(spec.id) ?? trip.current.returns.get(spec.id);
         dropIns.delete(spec.id);
         returns.delete(spec.id);
+        trip.current.returns.delete(spec.id);
         return [x !== undefined && activeRef.current ? spawnDropIn(spec, bounds, x, Math.random, now) : spawn([spec], bounds, Math.random, now, anchors)[0]!];
       }
       const swell = swells.current.get(spec.id);
@@ -109,7 +112,7 @@ export function useSwimLoop(
     });
     motion.current.swells.clear();
     for (const id of swells.current.keys()) if (!existing.has(id) || !ids.has(id)) swells.current.delete(id);
-  }, [specs, bounds, motion, hunt, anchors]);
+  }, [specs, bounds, motion, hunt, trip, anchors]);
 
   useEffect(() => {
     const el = tankRef.current;
@@ -297,11 +300,13 @@ export function useSwimLoop(
       world.current += (currentTargetRef.current - world.current) * Math.min(1, dt * 0.3);
       const events = step(simRef.current, boundsRef.current, dt, Math.random, t / 1000, world);
       if (swells.current.size) grow(t / 1000);
+      for (const s of simRef.current) if (s.mode !== 'leave' && trip.current.leaving.has(s.id)) swimOff(s, boundsRef.current, t / 1000);
       for (let i = simRef.current.length - 1; i >= 0; i--) {
         const s = simRef.current[i]!;
         if (s.mode !== 'leave' || !isGone(s, boundsRef.current)) continue;
         simRef.current.splice(i, 1);
         motion.current.onGone(s.id);
+        trip.current.onGone(s.id);
       }
       paint(t / 1000);
       blow(dt);
@@ -320,7 +325,7 @@ export function useSwimLoop(
       paint(performance.now() / 1000);
     }
     return () => cancelAnimationFrame(raf);
-  }, [active, specs, bounds, motion, hunt, bubbleLayer, flakeLayer, plaqueEl, plaqueId, hud]);
+  }, [active, specs, bounds, motion, hunt, trip, bubbleLayer, flakeLayer, plaqueEl, plaqueId, hud]);
 
   return { fishRefs, simRef, feed };
 }

@@ -14,12 +14,15 @@ import { anchorsFor, bubblesFor, decorFor, planktonFor, populationFor, specFor }
 import { uiEvent } from '../lib/telemetry';
 import { tankNotices } from '../lib/tankNotices';
 import { emptyTankMessage } from '../lib/tankLines';
+import { awaySpecies, awaySwimmerIds, hoverLine } from '../lib/tankExpedition';
 import type { SwimmerSpec } from '../lib/tankSim';
 import { Fish } from './Fish';
 import { PrHud, QuotaHud } from './ReefWidget';
 import { TankArrange, useTankArrange } from './TankArrange';
 import { TankBackdrop, TankDecor } from './TankDecor';
 import { TankHoverCard } from './TankHoverCard';
+import { TankMinimap } from './TankMinimap';
+import { TankTripPlanner } from './TankTripPlanner';
 import { TankRelease } from './TankRelease';
 import { TankLines } from './TankLines';
 import { TankNoticeChip, useMinuteClock } from './TankNotices';
@@ -34,6 +37,7 @@ import { useTankRelease } from './useTankRelease';
 import { useCausticSpeed, useSnappedBubbleRate, useWeedClock } from './useTankScenery';
 import { useSwimLoop } from './useSwimLoop';
 import { useTankHunt } from './useTankHunt';
+import { useTankExpedition } from './useTankExpedition';
 import { useTankFullscreen, useTankLayout } from './useTankFullscreen';
 
 // The Reef tank (docs/reef-tank-plan.md). Fish positions come from the pure
@@ -123,11 +127,23 @@ export function Tank({ onHeldRewards }: {
   }, [specs]);
   const rosterIds = useMemo(() => new Set(specs.map((sp) => sp.id)), [specs]);
   const hunt = useTankHunt(hunting, rosterIds, bounds.width);
+  const expeditions = useQuery({ queryKey: ['reef', 'expeditions'], queryFn: api.reef.expeditions, retry: false });
+  const awayIds = useMemo(
+    () => awaySwimmerIds(roster.map((r) => r.species), specs.map((sp) => sp.id), awaySpecies(expeditions.data)),
+    [roster, specs, expeditions.data],
+  );
+  const trip = useTankExpedition(awayIds, expeditions.data !== undefined, reduced, bounds.width);
+  // The trip planner opens over the full tank, so sending a party never leaves it.
+  const [planning, setPlanning] = useState(false);
+  const planTrip = () => {
+    uiEvent('reef.tank.minimap.plan');
+    setPlanning(true);
+  };
   // Fish leaving the roster mid-release swim off-edge and stay rendered until gone; a fish a shark ate is away for a while.
   const school = useMemo(() => [
-    ...roster.flatMap((r, i) => (hunt.eaten.has(specs[i]!.id) ? [] : [{ fish: r, spec: specs[i]!, leaving: false }])),
+    ...roster.flatMap((r, i) => (hunt.eaten.has(specs[i]!.id) || trip.gone.has(specs[i]!.id) ? [] : [{ fish: r, spec: specs[i]!, leaving: false }])),
     ...release.leavers.filter((l) => !rosterIds.has(l.spec.id)).map((l) => ({ ...l, leaving: true })),
-  ], [roster, specs, rosterIds, hunt.eaten, release.leavers]);
+  ], [roster, specs, rosterIds, hunt.eaten, trip.gone, release.leavers]);
   const swimSpecs = useMemo(() => school.map((f) => f.spec), [school]);
   const bubbleRate = useSnappedBubbleRate(Number(env.vars['--reef-bubble-rate'] ?? 1));
   const decor = useMemo(() => decorFor(bounds.width, fullscreen !== null), [bounds.width, fullscreen]);
@@ -166,7 +182,7 @@ export function Tank({ onHeldRewards }: {
   const sway = useMemo(() => ({ amp: swayAmp, degPerCurrent: 7 / (18 * scale) }), [swayAmp, scale]);
   const { fishRefs, simRef, feed } = useSwimLoop(
     tankRef, bubbleLayer, flakeLayer, swimSpecs, simBounds, reduced ? 0 : env.current * 18 * scale, release.motion, anchors,
-    plaqueEl, plaqueIdRef, hudRef, sway, hunt.motion,
+    plaqueEl, plaqueIdRef, hudRef, sway, hunt.motion, trip.motion,
   );
   useWeedClock(tankRef, decor.weeds);
   const masked = useMemo(
@@ -413,7 +429,10 @@ export function Tank({ onHeldRewards }: {
         </div>
       )}
       {!plaque && !arranging && hoveredFish && hoveredSwimmer && (
-        <TankHoverCard fish={hoveredFish} swimmer={hoveredSwimmer} bounds={bounds} />
+        <TankHoverCard
+          fish={hoveredFish} swimmer={hoveredSwimmer} bounds={bounds}
+          expedition={hoverLine(expeditions.data?.fish.find((f) => f.species === hoveredFish.species))}
+        />
       )}
       {plaqueFish && plaqueText && (
         <TankPlaque
@@ -473,6 +492,12 @@ export function Tank({ onHeldRewards }: {
         >
           {notices.map((n) => <TankNoticeChip key={n.key} notice={n} />)}
         </div>
+      )}
+      {fullscreen && !arranging && expeditions.data && (
+        <TankMinimap state={expeditions.data} bottom={decor.floor + 8} onPlan={planTrip} />
+      )}
+      {fullscreen && planning && expeditions.data && !expeditions.data.trip && (
+        <TankTripPlanner state={expeditions.data} onClose={() => setPlanning(false)} />
       )}
       <button
         type="button"
