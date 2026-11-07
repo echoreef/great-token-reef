@@ -19,7 +19,7 @@ const reefRoute = createRoute({
   path: '/',
   component: ReefView,
   // Collection is the default tab and stays out of the URL.
-  validateSearch: (input: Record<string, unknown>): { tab?: 'inventory' | 'models' | 'projects' | 'sessions'; agent?: 'all' | 'claude' | 'codex'; species?: number; reefTime?: number; reefStorm?: StormLevel; reefDecor?: string; reefBackdrop?: string; reefVisitors?: 'demo'; reefLegends?: 'preview'; release?: 1; arrange?: 1 } => ({
+  validateSearch: (input: Record<string, unknown>): { tab?: 'inventory' | 'expeditions' | 'models' | 'projects' | 'sessions'; agent?: 'all' | 'claude' | 'codex'; species?: number; reefTime?: number; reefStorm?: StormLevel; reefDecor?: string; reefBackdrop?: string; reefVisitors?: 'demo'; reefLegends?: 'preview'; reefFinds?: 'preview'; release?: 1; arrange?: 1; plan?: 1 } => ({
     species: Number.isInteger(Number(input.species)) && input.species !== undefined ? Number(input.species) : undefined,
     // Dev-only: pins the tank's hour so night can be checked at 2pm.
     reefTime:
@@ -34,6 +34,8 @@ const reefRoute = createRoute({
     reefVisitors: input.reefVisitors === 'demo' ? 'demo' : undefined,
     // Dev-only: all 24 legendaries as caught in the collection strip, and one of each in the tank.
     reefLegends: input.reefLegends === 'preview' ? 'preview' : undefined,
+    // Dev-only: every find drawing shown as found in the Expeditions log.
+    reefFinds: input.reefFinds === 'preview' ? 'preview' : undefined,
     agent: ['all', 'claude', 'codex'].includes(input.agent as string)
       ? (input.agent as 'all' | 'claude' | 'codex')
       : undefined,
@@ -41,8 +43,10 @@ const reefRoute = createRoute({
     release: input.release === 1 || input.release === '1' ? 1 : undefined,
     // Set by the Inventory tab's "Arrange in tank"; the tank goes fullscreen in arrange mode and drops it on exit.
     arrange: input.arrange === 1 || input.arrange === '1' ? 1 : undefined,
-    tab: ['inventory', 'models', 'projects', 'sessions'].includes(input.tab as string)
-      ? (input.tab as 'inventory' | 'models' | 'projects' | 'sessions')
+    // Set by the tank minimap's "Start a trip"; the Expeditions tab scrolls into view, then drops it.
+    plan: input.plan === 1 || input.plan === '1' ? 1 : undefined,
+    tab: ['inventory', 'expeditions', 'models', 'projects', 'sessions'].includes(input.tab as string)
+      ? (input.tab as 'inventory' | 'expeditions' | 'models' | 'projects' | 'sessions')
       : undefined,
   }),
 });
