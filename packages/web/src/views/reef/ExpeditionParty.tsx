@@ -64,7 +64,7 @@ export function ExpeditionParty({ state }: { state: ReefExpeditions }) {
           );
         })}
       </div>
-      <button type="button" className={btnPrimary} disabled={!ready || start.isPending} onClick={() => start.mutate()}>
+      <button type="button" className={`${btnPrimary} px-3 py-1.5 text-sm`} disabled={!ready || start.isPending} onClick={() => start.mutate()}>
         Send the party
       </button>
       {start.error && <p className="text-xs text-red-500">{start.error.message}</p>}
