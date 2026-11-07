@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DEPTHS, PARTY_SIZE, isLegendary, partyProblem, speciesName, type Depth, type ReefExpeditions } from '@gtr/shared';
-import { Fish } from '../../components/Fish';
-import { btnPrimary, chip } from '../../components/ui';
-import { api } from '../../lib/api';
-import { depthPreview, memberBlock, pickerOrder, toggleMember } from '../../lib/expeditionView';
-import { uiEvent } from '../../lib/telemetry';
+import { api } from '../lib/api';
+import { depthPreview, memberBlock, pickerOrder, toggleMember } from '../lib/expeditionView';
+import { uiEvent } from '../lib/telemetry';
+import { Fish } from './Fish';
+import { btnPrimary, chip } from './ui';
 
-export function ExpeditionParty({ state }: { state: ReefExpeditions }) {
+/** Party and depth picker, used by the Expeditions tab and the full tank's trip planner. */
+export function ExpeditionParty({ state, onSent }: { state: ReefExpeditions; onSent?: () => void }) {
   const queryClient = useQueryClient();
   const [party, setParty] = useState<number[]>([]);
   const [depth, setDepth] = useState<Depth>('shallows');
@@ -17,6 +18,7 @@ export function ExpeditionParty({ state }: { state: ReefExpeditions }) {
       uiEvent('reef.expedition.start', depth);
       queryClient.setQueryData(['reef', 'expeditions'], next);
       setParty([]);
+      onSent?.();
     },
   });
   if (state.fish.length < PARTY_SIZE) {
