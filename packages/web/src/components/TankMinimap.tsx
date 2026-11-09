@@ -56,14 +56,14 @@ export function TankMinimap({ state, bottom, onPlan }: { state: ReefExpeditions;
     );
   }
   return (
-    <div data-reef-nofeed className={`${box} w-52 px-3 py-2`} style={{ bottom }}>
+    <div data-reef-nofeed className={`${box} ${summary ? 'w-72' : 'w-52'} px-3 py-2`} style={{ bottom }}>
       <button type="button" onClick={() => saveHidden(true)} aria-label="Hide the expedition map" className="absolute right-2 top-1 text-white/60 hover:text-white">
         –
       </button>
       {summary ? (
         <button type="button" className="block w-full text-left" onClick={() => setSummary(null)}>
           <div className="font-semibold">🎉 Welcome home</div>
-          {summary.map((line, i) => <div key={i} className="truncate text-white/80">{line}</div>)}
+          {summary.map((line, i) => <div key={i} className="text-white/80">{line}</div>)}
         </button>
       ) : view.kind === 'rest' ? (
         <button type="button" className="block text-left" onClick={onPlan}>
