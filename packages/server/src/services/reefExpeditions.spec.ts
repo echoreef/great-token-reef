@@ -1,7 +1,7 @@
 import { DEFAULT_TYPICAL_DAY, LEGENDARY_ID_BASE, SPECIES_COUNT, findsAt, speciesRarity, type Rarity } from '@gtr/shared';
 import { describe, expect, it } from 'vitest';
 import { fixtureDb } from './fixtures.ts';
-import { activeDayTotals, chooseTitle, expeditionState, startExpedition, welcomeHome } from './reefExpeditions.ts';
+import { activeDayTotals, chooseTitle, expeditionState, startExpedition, tripLog, welcomeHome } from './reefExpeditions.ts';
 import { setSetting } from './settings.ts';
 
 const NOW = Math.floor(Date.now() / 1000);
@@ -158,6 +158,28 @@ describe('welcoming a party home', () => {
     addUsage(db, NOW + 10, DEFAULT_TYPICAL_DAY);
     const r = welcomeHome(db, NOW + 20, always);
     expect(r.ok && { xp: r.value.xp, find: r.value.find }).toEqual({ xp: Math.floor((4 * 19) / 27), find: null });
+  });
+});
+
+describe('trip log', () => {
+  it('lists every finished trip newest first, with its find, the levels reached and the titles earned', () => {
+    const db = tank();
+    startExpedition(db, { depth: 'shallows', party: [COMMON, RARE, EPIC] }, NOW);
+    addUsage(db, NOW + 10, DEFAULT_TYPICAL_DAY);
+    welcomeHome(db, NOW + 20, always);
+    startExpedition(db, { depth: 'reef', party: [COMMON, RARE, EPIC] }, NOW + 30);
+    expect(tripLog(db)).toHaveLength(1);
+    addUsage(db, NOW + 40, DEFAULT_TYPICAL_DAY);
+    welcomeHome(db, NOW + 50, always);
+    const [second, first] = tripLog(db);
+    expect(first).toEqual({
+      id: 1, depth: 'shallows', party: [COMMON, RARE, EPIC], strength: first!.strength, full: true, xp: 1,
+      lengthTokens: DEFAULT_TYPICAL_DAY / 4, startedAt: NOW, returnedAt: NOW + 20, find: findsAt('shallows')[0]!.id,
+      levels: [COMMON, RARE, EPIC].map((species) => ({ species, level: 2 })),
+      titles: [COMMON, RARE, EPIC].map((species) => ({ species, title: 'treasure-hunter' })),
+    });
+    expect(second).toMatchObject({ id: 2, depth: 'reef', full: false, find: null, returnedAt: NOW + 50 });
+    expect(second!.levels).toEqual([COMMON, RARE, EPIC].map((species) => ({ species, level: 3 })));
   });
 });
 

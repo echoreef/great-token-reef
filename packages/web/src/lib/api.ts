@@ -2,7 +2,7 @@ import type {
   ConnectExcludedReposBody, ConnectGithubBody, ConnectJiraBody, ConnectOrgsBody, ConnectStatus, FishPicks,
   OfficialLimits, OpenPr, ReefAgentFilter, ReefBudgets, ReefCatchesByDate, ReefCollection, ReefDecorBody,
   ReefModelRow, ReefPending, ReefProjectRow, ReefReleaseResult, ReefRewards, ReefScanResult, ReefSessionRow,
-  ReefSummary, ReefTrendRow, ScannerStatus, Depth, ReefExpeditions, ReefExpeditionWelcome,
+  ReefSummary, ReefTrendRow, ScannerStatus, Depth, ReefExpeditions, ReefExpeditionLog, ReefExpeditionWelcome,
 } from '@gtr/shared';
 
 // Thin typed fetch client over the REST API. Types come from @gtr/shared —
@@ -72,6 +72,7 @@ export const api = {
     setBudgets: (b: ReefBudgets) => send<ReefBudgets>('PUT', '/api/reef/budgets', b),
     prs: () => get<OpenPr[]>('/api/reef/prs'),
     expeditions: () => get<ReefExpeditions>('/api/reef/expeditions'),
+    expeditionTrips: () => get<ReefExpeditionLog>('/api/reef/expeditions/trips'),
     startExpedition: (depth: Depth, party: number[]) =>
       send<ReefExpeditions>('POST', '/api/reef/expeditions/start', { depth, party }),
     welcomeExpedition: () => send<ReefExpeditionWelcome>('POST', '/api/reef/expeditions/welcome'),

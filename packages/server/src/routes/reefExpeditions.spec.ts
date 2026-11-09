@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ReefExpeditionWelcome, ReefExpeditions, SPECIES_COUNT, speciesRarity, type Rarity } from '@gtr/shared';
+import { ReefExpeditionLog, ReefExpeditionWelcome, ReefExpeditions, SPECIES_COUNT, speciesRarity, type Rarity } from '@gtr/shared';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { createApp } from '../app.ts';
@@ -85,5 +85,10 @@ describe('expedition routes', () => {
     expect((await call('PUT', '/api/reef/expeditions/fish/999999/title', { title: null })).status).toBe(400);
     await parse(await call('PUT', `/api/reef/expeditions/fish/${PARTY[0]}/title`, { title: null }), ReefExpeditions);
     expect(seen).toEqual(['reef', 'reef', 'reef']);
+  });
+
+  it('GET /trips lists finished trips', async () => {
+    const log = await parse(await app.request('/api/reef/expeditions/trips'), ReefExpeditionLog);
+    expect(log.trips.map((t) => ({ depth: t.depth, party: t.party, xp: t.xp }))).toEqual([{ depth: 'shallows', party: PARTY, xp: 1 }]);
   });
 });

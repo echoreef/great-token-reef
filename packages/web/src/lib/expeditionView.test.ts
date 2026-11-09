@@ -1,6 +1,6 @@
-import { LEGENDARY_ID_BASE, type ReefExpeditionFish } from '@gtr/shared';
+import { LEGENDARY_ID_BASE, speciesName, type ReefExpeditionFish } from '@gtr/shared';
 import { describe, expect, it } from 'vitest';
-import { depthPreview, memberBlock, pickerOrder, toggleMember, tripProgress } from './expeditionView';
+import { depthPreview, memberBlock, pickerOrder, toggleMember, tripNotes, tripProgress } from './expeditionView';
 
 const fish = (species: number, strength: number): ReefExpeditionFish => ({
   species, xp: 0, level: 1, trips: 0, strength, titles: [], chosenTitle: null, shownTitle: null,
@@ -30,5 +30,10 @@ describe('expedition view', () => {
   });
   it('orders the picker strongest first', () => {
     expect(pickerOrder([fish(5, 3), fish(2, 9), fish(1, 3)]).map((f) => f.species)).toEqual([2, 1, 5]);
+  });
+  it('notes the levels reached and titles earned on a past trip', () => {
+    const trip = { levels: [{ species: 1, level: 10 }], titles: [{ species: 1, title: 'riptide' }, { species: 2, title: 'not-a-title' }] };
+    expect(tripNotes(trip)).toEqual([`${speciesName(1)} reached level 10`, `${speciesName(1)} earned Riptide`, `${speciesName(2)} earned not-a-title`]);
+    expect(tripNotes({ levels: [], titles: [] })).toEqual([]);
   });
 });

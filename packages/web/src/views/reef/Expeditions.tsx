@@ -6,6 +6,7 @@ import { compactNumber } from '../../lib/format';
 import { ExpeditionLog } from './ExpeditionLog';
 import { ExpeditionTitles } from './ExpeditionTitles';
 import { ExpeditionTrip } from './ExpeditionTrip';
+import { ExpeditionTrips } from './ExpeditionTrips';
 
 export function Expeditions() {
   const q = useQuery({ queryKey: ['reef', 'expeditions'], queryFn: api.reef.expeditions });
@@ -27,6 +28,7 @@ export function Expeditions() {
       )}
       <ExpeditionLog finds={q.data.finds} />
       <ExpeditionTitles fish={q.data.fish} />
+      <ExpeditionTrips />
     </section>
   );
 }

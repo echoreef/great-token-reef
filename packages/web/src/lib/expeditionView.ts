@@ -1,4 +1,7 @@
-import { DEPTH_RULES, PARTY_SIZE, isLegendary, tripPayout, type Depth, type ReefExpeditionFish, type ReefExpeditionTrip } from '@gtr/shared';
+import {
+  DEPTH_RULES, PARTY_SIZE, isLegendary, speciesName, titleName, tripPayout,
+  type Depth, type ReefExpeditionFish, type ReefExpeditionLogEntry, type ReefExpeditionTrip,
+} from '@gtr/shared';
 import { compactNumber } from './format';
 
 // Pure helpers behind the Expeditions tab.
@@ -47,4 +50,12 @@ export function tripProgress(trip: ReefExpeditionTrip): { percent: number; token
     percent: Math.floor((100 * trip.progressTokens) / trip.lengthTokens),
     tokens: `${compactNumber(trip.progressTokens)} of ${compactNumber(trip.lengthTokens)}`,
   };
+}
+
+/** What happened to the party on a past trip, beyond the experience: level-ups, then titles. */
+export function tripNotes(trip: Pick<ReefExpeditionLogEntry, 'levels' | 'titles'>): string[] {
+  return [
+    ...trip.levels.map((l) => `${speciesName(l.species)} reached level ${l.level}`),
+    ...trip.titles.map((t) => `${speciesName(t.species)} earned ${titleName(t.title)}`),
+  ];
 }

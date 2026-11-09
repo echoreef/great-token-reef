@@ -1,7 +1,7 @@
 import {
   DEPTH_RULES, LOG_TITLE, TYPICAL_WINDOW, findsAt, fishStrength, isTitleId, levelForXp, milestoneTitles, partyProblem,
   partyStrength, rollFind, seededRng, shownTitle, tripLength, tripPayout, typicalDay,
-  type Depth, type FishRecord, type PartyProblem, type ReefExpeditionFind, type ReefExpeditionStartBody,
+  type Depth, type FishRecord, type PartyProblem, type ReefExpeditionFind, type ReefExpeditionLogEntry, type ReefExpeditionStartBody,
   type ReefExpeditionTrip, type ReefExpeditionWelcome, type ReefExpeditions, type TitleId,
 } from '@gtr/shared';
 import type { Db } from '../store/db.ts';
@@ -131,6 +131,38 @@ export function expeditionState(db: Db, now: number): ReefExpeditions {
   });
   const open = openTrip(db);
   return { typicalDayTokens: typicalDay(activeDayTotals(db, now)), trip: open && tripView(db, open), fish, finds: findRows(db) };
+}
+
+/** Every finished trip, newest first. Levels are replayed from the experience each trip paid. */
+export function tripLog(db: Db): ReefExpeditionLogEntry[] {
+  const trips = db.prepare(
+    `SELECT t.id, t.depth, t.party_json, t.strength, t.length_tokens, t.started_at, t.welcomed_at, t.xp_awarded,
+            (SELECT f.find FROM expedition_finds f WHERE f.trip_id = t.id ORDER BY f.rowid LIMIT 1) AS find
+     FROM expedition_trips t WHERE t.welcomed_at IS NOT NULL ORDER BY t.welcomed_at, t.id`,
+  ).all() as {
+    id: number; depth: Depth; party_json: string; strength: number; length_tokens: number;
+    started_at: number; welcomed_at: number; xp_awarded: number; find: string | null;
+  }[];
+  const titles = new Map<number, { species: number; title: string }[]>();
+  const titleRows = db.prepare('SELECT trip_id, species, title FROM expedition_titles ORDER BY earned_at, rowid')
+    .all() as { trip_id: number; species: number; title: string }[];
+  for (const r of titleRows) titles.set(r.trip_id, [...(titles.get(r.trip_id) ?? []), { species: r.species, title: r.title }]);
+  const xp = new Map<number, number>();
+  return trips.map((t) => {
+    const party = JSON.parse(t.party_json) as number[];
+    const levels: { species: number; level: number }[] = [];
+    for (const species of party) {
+      const before = xp.get(species) ?? 0;
+      xp.set(species, before + t.xp_awarded);
+      const level = levelForXp(before + t.xp_awarded);
+      if (level > levelForXp(before)) levels.push({ species, level });
+    }
+    return {
+      id: t.id, depth: t.depth, party, strength: t.strength, full: t.strength >= DEPTH_RULES[t.depth].recommended,
+      xp: t.xp_awarded, lengthTokens: t.length_tokens, startedAt: t.started_at, returnedAt: t.welcomed_at,
+      find: t.find, levels, titles: titles.get(t.id) ?? [],
+    };
+  }).reverse();
 }
 
 export function startExpedition(db: Db, body: ReefExpeditionStartBody, now: number): ExpeditionResult<ReefExpeditions> {

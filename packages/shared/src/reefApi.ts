@@ -280,6 +280,29 @@ export const ReefExpeditionWelcome = z.strictObject({
 });
 export type ReefExpeditionWelcome = z.infer<typeof ReefExpeditionWelcome>;
 
+/** A finished trip, as the trip log shows it. */
+export const ReefExpeditionLogEntry = z.strictObject({
+  id: int,
+  depth: DepthValue,
+  party: z.array(int),
+  strength: int,
+  /** at or above the depth's recommended strength */
+  full: z.boolean(),
+  xp: int,
+  lengthTokens: int,
+  startedAt: unixSeconds,
+  returnedAt: unixSeconds,
+  find: z.string().nullable(),
+  /** the level each fish reached on this trip, for fish that levelled up */
+  levels: z.array(z.strictObject({ species: int, level: int })),
+  titles: z.array(z.strictObject({ species: int, title: z.string() })),
+});
+export type ReefExpeditionLogEntry = z.infer<typeof ReefExpeditionLogEntry>;
+
+/** Every finished trip, newest first. */
+export const ReefExpeditionLog = z.strictObject({ trips: z.array(ReefExpeditionLogEntry) });
+export type ReefExpeditionLog = z.infer<typeof ReefExpeditionLog>;
+
 export const ReefExpeditionStartBody = z.object({ depth: DepthValue, party: z.array(int).length(3) });
 export type ReefExpeditionStartBody = z.infer<typeof ReefExpeditionStartBody>;
 

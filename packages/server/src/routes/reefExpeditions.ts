@@ -2,13 +2,14 @@ import { ReefExpeditionStartBody, ReefExpeditionTitleBody } from '@gtr/shared';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from '../app.ts';
-import { chooseTitle, expeditionState, startExpedition, welcomeHome } from '../services/reefExpeditions.ts';
+import { chooseTitle, expeditionState, startExpedition, tripLog, welcomeHome } from '../services/reefExpeditions.ts';
 
 const now = () => Math.floor(Date.now() / 1000);
 const speciesParam = z.coerce.number().int().nonnegative();
 
 export const reefExpeditions = new Hono<AppEnv>()
   .get('/', (c) => c.json(expeditionState(c.get('db'), now())))
+  .get('/trips', (c) => c.json({ trips: tripLog(c.get('db')) }))
   .post('/start', async (c) => {
     const body = ReefExpeditionStartBody.safeParse(await c.req.json().catch(() => null));
     if (!body.success) return c.json({ error: 'expected { depth, party } (a depth and three species ids)' }, 400);
