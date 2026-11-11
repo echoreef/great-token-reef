@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ReefVisitorError, unixSeconds } from './entities.ts';
 import { RarityValue } from './fish.ts';
+import { DepthValue } from './expeditions.ts';
 
 // Response contract for the Reef API: the server's service functions return these
 // types and the web reads them. Objects are strict so a route test fails when the
@@ -221,3 +222,89 @@ export type ReefBackdropBody = z.infer<typeof ReefBackdropBody>;
 export const ReefBudgetsBody = z.object({ window5h: int.positive().nullable(), week: int.positive().nullable() });
 export const ReefBudgets = z.strictObject(ReefBudgetsBody.shape);
 export type ReefBudgets = z.infer<typeof ReefBudgets>;
+
+// Expeditions. Titles are plain strings on the wire so an older client still parses a newer title.
+
+export const ReefExpeditionFish = z.strictObject({
+  species: int,
+  xp: int,
+  level: int,
+  trips: int,
+  strength: int,
+  /** earned titles, newest first */
+  titles: z.array(z.string()),
+  chosenTitle: z.string().nullable(),
+  shownTitle: z.string().nullable(),
+});
+export type ReefExpeditionFish = z.infer<typeof ReefExpeditionFish>;
+
+export const ReefExpeditionTrip = z.strictObject({
+  id: int,
+  depth: DepthValue,
+  party: z.array(int),
+  strength: int,
+  lengthTokens: int,
+  progressTokens: int,
+  startedAt: unixSeconds,
+  /** the trip is full and the party waits to be welcomed home */
+  returned: z.boolean(),
+});
+export type ReefExpeditionTrip = z.infer<typeof ReefExpeditionTrip>;
+
+export const ReefExpeditionFind = z.strictObject({
+  id: z.string(),
+  depth: DepthValue,
+  tripId: int,
+  party: z.array(int),
+  foundAt: unixSeconds,
+});
+export type ReefExpeditionFind = z.infer<typeof ReefExpeditionFind>;
+
+export const ReefExpeditions = z.strictObject({
+  typicalDayTokens: int,
+  trip: ReefExpeditionTrip.nullable(),
+  /** every species released into the tank */
+  fish: z.array(ReefExpeditionFish),
+  finds: z.array(ReefExpeditionFind),
+});
+export type ReefExpeditions = z.infer<typeof ReefExpeditions>;
+
+export const ReefExpeditionWelcome = z.strictObject({
+  tripId: int,
+  depth: DepthValue,
+  party: z.array(int),
+  xp: int,
+  find: z.string().nullable(),
+  titles: z.array(z.strictObject({ species: int, title: z.string() })),
+  state: ReefExpeditions,
+});
+export type ReefExpeditionWelcome = z.infer<typeof ReefExpeditionWelcome>;
+
+/** A finished trip, as the trip log shows it. */
+export const ReefExpeditionLogEntry = z.strictObject({
+  id: int,
+  depth: DepthValue,
+  party: z.array(int),
+  strength: int,
+  /** at or above the depth's recommended strength */
+  full: z.boolean(),
+  xp: int,
+  lengthTokens: int,
+  startedAt: unixSeconds,
+  returnedAt: unixSeconds,
+  find: z.string().nullable(),
+  /** the level each fish reached on this trip, for fish that levelled up */
+  levels: z.array(z.strictObject({ species: int, level: int })),
+  titles: z.array(z.strictObject({ species: int, title: z.string() })),
+});
+export type ReefExpeditionLogEntry = z.infer<typeof ReefExpeditionLogEntry>;
+
+/** Every finished trip, newest first. */
+export const ReefExpeditionLog = z.strictObject({ trips: z.array(ReefExpeditionLogEntry) });
+export type ReefExpeditionLog = z.infer<typeof ReefExpeditionLog>;
+
+export const ReefExpeditionStartBody = z.object({ depth: DepthValue, party: z.array(int).length(3) });
+export type ReefExpeditionStartBody = z.infer<typeof ReefExpeditionStartBody>;
+
+export const ReefExpeditionTitleBody = z.object({ title: z.string().min(1).nullable() });
+export type ReefExpeditionTitleBody = z.infer<typeof ReefExpeditionTitleBody>;
