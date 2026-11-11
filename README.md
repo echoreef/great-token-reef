@@ -83,6 +83,22 @@ Replace `icon.png` in the repo root, then run `pnpm icons`.
 
 Newest first.
 
+### Expeditions, November 11, 2026
+
+By [@yglgary](https://github.com/yglgary).
+Pull request: <https://github.com/echoreef/great-token-reef/pull/13>
+
+A new Expeditions tab sends a party of three fish on a trip into the deep:
+the shallows, the reef, the drop-off or the abyss. A trip moves forward as you
+use tokens, and a deeper trip lasts longer, from a quarter of your typical day
+up to five days. When the party comes home, its fish gain experience and levels
+and may bring back one of 32 finds to collect. Fish earn titles as they level
+up, and you pick which one each fish shows. A stronger party is needed for the
+deeper water; a party below the recommended strength earns less and finds
+nothing, but a trip never fails. In the fullscreen tank, the party swims off
+when a trip starts and drops back in when it ends. A minimap shows how far the
+trip has gone, and you can plan the next trip without leaving the tank.
+
 ### Wary fish, November 6, 2026
 
 By [@yglgary](https://github.com/yglgary).
