@@ -12,7 +12,7 @@
   "dependencies": {
     "@gtr/shared": "workspace:*",
     "@hono/node-server": "^1.14.0",
-    "hono": "^4.7.0",
+    "hono": "^4.13.16",
     "tsx": "^4.19.0",
     "zod": "^4.4.3"
   },
